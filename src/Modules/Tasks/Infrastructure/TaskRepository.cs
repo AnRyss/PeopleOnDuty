@@ -24,4 +24,16 @@ namespace PeopleOnDuty.src.Modules.Tasks;
         _tasksContext.Tasks.Update(task);
             await _tasksContext.SaveChangesAsync(ct);
         }
+        public async Task<bool> TryTakeAsync(Guid taskId, Guid userId, CancellationToken ct)
+    {
+        var succesedOperation = await _tasksContext.Tasks.
+        Where(t => t.TaskId == taskId
+          && t.Status == TaskStatus.OPENED
+          && t.AuthorId != userId) 
+           .ExecuteUpdateAsync(s => s
+        .SetProperty(t => t.Status, TaskStatus.TAKEN)
+        .SetProperty(t => t.TakenBy, userId)
+        .SetProperty(t => t.TakenAt, DateTime.UtcNow), ct);
+        return succesedOperation == 1;
+    }
     }

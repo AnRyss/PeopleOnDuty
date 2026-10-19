@@ -1,0 +1,12 @@
+ 
+bin/
+obj/
+
+
+appsettings.Development.json
+appsettings.Local.json
+
+.vs/
+*.user
+*.suo
+
