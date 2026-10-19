@@ -1,10 +1,12 @@
 using PeopleOnDuty.src.Modules.Shared;
+using PeopleOnDuty.src.Modules.Users;
 
 namespace PeopleOnDuty.src.Modules.Tasks
 {
-    public class TaskService(ITaskRepository taskRepository, ICurrentUser currentUser)
+    public class TaskService(ITaskRepository taskRepository, ICurrentUser currentUser, IUserService userService) : ITaskService
 
-    {
+    {   
+            private IUserService _userService = userService;
             private ICurrentUser _currentUser = currentUser;
             private ITaskRepository _taskRepository = taskRepository;
           public async Task AbandonTaskAsync(Guid taskId, CancellationToken ct)
@@ -48,14 +50,25 @@ namespace PeopleOnDuty.src.Modules.Tasks
         public async Task<IReadOnlyList<OpenedTaskDto>> GetOpenTasksAsync(CancellationToken ct)
         {
             var tasks = await _taskRepository.GetByStatusAsync(TaskStatus.OPENED, ct);
-            return tasks.Select(t => new OpenedTaskDto( t.Name,t.Description, t.Reward,t.AuthorId));
+                var authorIds = tasks.Select(t => t.AuthorId).Distinct().ToList();
+    
+    var authors = await _userService.GetUsersAsync(authorIds, ct);
+    var authorMap = authors.ToDictionary(a => a.UserId, a => a.Name);
+            return tasks.Select(t => new OpenedTaskDto( t.Name,t.Description, t.Reward, authorMap.GetValueOrDefault(t.AuthorId, "Unknown")))
+            .ToList();
         }
 
-        public Task TakeTaskAsync(Guid taskId, CancellationToken ct)
+        public async Task TakeTaskAsync(Guid taskId, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            var task = await _taskRepository.GetAsync(taskId, ct)
+        ?? throw new Exception($"Task {taskId} not found");
+        task.Take(_currentUser.UserId);
+
+    // Атомарный захват 
+    var taken = await _taskRepository.TryTakeAsync(taskId, _currentUser.UserId, ct);
+    if (!taken)
+        throw new ConflictException("Task already taken by someone else");
         }
 
     }
     }
-}
