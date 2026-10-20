@@ -7,9 +7,9 @@ namespace PeopleOnDuty.src.Modules.Tasks
     public class TaskService(ITaskRepository taskRepository, IUserService userService) : ITaskService
 
     {
-        private IUserService _userService = userService;
+        private readonly IUserService _userService = userService;
 
-        private ITaskRepository _taskRepository = taskRepository;
+        private readonly ITaskRepository _taskRepository = taskRepository;
         public async Task AbandonTaskAsync(Guid taskId, Guid userId, CancellationToken ct)
         {
             var task = await _taskRepository.GetAsync(taskId) ?? throw new KeyNotFoundException("No such Task");
