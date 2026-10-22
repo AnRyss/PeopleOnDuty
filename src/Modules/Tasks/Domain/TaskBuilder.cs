@@ -26,7 +26,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
         return this;
     }
 
-    public TaskBuilder WithUntilTime(DateTime untilTime)
+    public TaskBuilder WithUntilTime(DateTime? untilTime)
     {
         _untilTime = untilTime;
         return this;
@@ -40,15 +40,13 @@ namespace PeopleOnDuty.src.Modules.Tasks
             throw new InvalidOperationException("Name is required");
         if (string.IsNullOrWhiteSpace(_reward))
             throw new InvalidOperationException("Reward is required");
-        if (_untilTime is null)
-            throw new InvalidOperationException("UntilTime is required");
         if ( authorId == Guid.Empty)
             throw new InvalidOperationException("AuthorId is required");
 
         
         return string.IsNullOrWhiteSpace(_description)
-            ? new DutyTask(_name!, _reward!, _untilTime.Value, authorId)
-            : new DutyTask(_description!, _name!, _reward!, _untilTime.Value, authorId);
+            ? new DutyTask(_name!, _reward!, _untilTime, authorId)
+            : new DutyTask(_description!, _name!, _reward!, _untilTime, authorId);
     }
     }
 }

@@ -13,5 +13,13 @@ namespace PeopleOnDuty.src.Modules.Users
         {
           return await _userContext.Users.Where(u => guids.Contains( u.UserId)).ToListAsync(ct);
         }
+        public async Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken ct)
+    {
+        return await _userContext.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId,ct);
+    }
+      public async Task AddAsync(User user, CancellationToken ct)
+    {
+      await _userContext.AddAsync(user,ct);
+    }
     }
 }

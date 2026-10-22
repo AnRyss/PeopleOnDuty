@@ -10,20 +10,22 @@ public Guid TaskId { get; init; } = Guid.NewGuid();
 public string? Description{get;private set;}
 public  string Name{get;init;}
 public string Reward {get;init;}
-public DateTime UntilTime {get;init;}
+public DateTime? UntilTime {get;init;}
 public TaskStatus Status { get; private set; } = TaskStatus.OPENED;
 public Guid? TakenBy{get;private set;} = null;
 public DateTime? TakenAt { get; private set; } = null;
 
-public DutyTask(string description, string name, string reward, DateTime untilTime, Guid authorId)
+public DutyTask(string description, string name, string reward, DateTime? untilTime, Guid authorId)
     {
+       
         Description = description;
         Name = name;
         Reward = reward;
         UntilTime = untilTime;
         AuthorId = authorId;
     }
-    public DutyTask( string name, string reward, DateTime untilTime, Guid authorId) {
+    public DutyTask( string name, string reward, DateTime? untilTime, Guid authorId) {
+          
         Description = null;
         Name = name;
         Reward = reward;
@@ -74,7 +76,7 @@ public void Abandon()
         throw new InvalidOperationException("Cannot cancel completed task");
     TakenBy = null;
     TakenAt = null;
-    Status = TaskStatus.CANCELLED;
+    Status = TaskStatus.OPENED;
 }
 }
 public enum TaskStatus
