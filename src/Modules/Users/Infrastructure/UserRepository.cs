@@ -20,6 +20,7 @@ namespace PeopleOnDuty.src.Modules.Users
       public async Task AddAsync(User user, CancellationToken ct)
     {
       await _userContext.AddAsync(user,ct);
+      await _userContext.SaveChangesAsync();
     }
     }
 }

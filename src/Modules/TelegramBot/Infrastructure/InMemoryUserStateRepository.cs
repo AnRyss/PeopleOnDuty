@@ -11,7 +11,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
         var state = _states.GetOrAdd(userId, id => new UserState 
         { 
             TelegramUserId = id, 
-            CurrentState = "MainMenu" 
+            CurrentState = Scenarios.StateType.MainMenu
         });
         return Task.FromResult(state);
     }

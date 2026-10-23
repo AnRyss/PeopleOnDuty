@@ -18,7 +18,7 @@ public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provide
 {
     new BotCommand { Command = "start", Description = "Запустить бота / Главное меню" },
     new BotCommand { Command = "tell_about", Description = "Помощь" }
-    // Добавь сюда свои команды, если они будут (например, "my_tasks")
+    
 };
          Console.WriteLine("TelegramBotService STARTED");
          await _bot.SetMyCommands(commands, cancellationToken: ct);

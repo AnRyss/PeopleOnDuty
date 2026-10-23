@@ -36,7 +36,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
         public async Task<Guid> CreateTaskAsync(DutyTask task, CancellationToken ct)
         {
-            await _taskRepository.SaveAsync(task, ct);
+            await _taskRepository.AddAsync(task, ct);
             return task.TaskId;
         }
 
@@ -44,7 +44,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
         {
             var tasks = await _taskRepository.GetByTakerAsync(userId, ct);
             return tasks
-       .Select(t => new TakenTaskDto(t.Name, t.Description, t.Reward, t.Status, t.TakenAt))
+       .Select(t => new TakenTaskDto(t.Name, t.Description, t.Reward, t.Status, t.TakenAt, t.TaskId))
        .ToList();
         }
 
@@ -55,14 +55,20 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
             var authors = await _userService.GetUsersAsync(authorIds, ct);
             var authorMap = authors.ToDictionary(a => a.UserId, a => a.Name);
-            return tasks.Select(t => new OpenedTaskDto(t.Name, t.Description, t.Reward, authorMap.GetValueOrDefault(t.AuthorId, "Unknown")))
+            return tasks.Select(t => new OpenedTaskDto(t.Name, t.Description, t.Reward, authorMap.GetValueOrDefault(t.AuthorId, "Unknown"), t.TaskId))
             .ToList();
         }
 
         public async Task TakeTaskAsync(Guid taskId, Guid userId, CancellationToken ct)
-        {
+        {   
+            
+
             var task = await _taskRepository.GetAsync(taskId, ct)
         ?? throw new Exception($"Task {taskId} not found");
+
+            if (task.AuthorId == userId)
+            throw new InvalidOperationException("Author can not take his own task");
+
             task.Take(userId);
 
             // Атомарный захват 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PeopleOnDuty.src.Modules.Host;
 using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Tasks;
 using PeopleOnDuty.src.Modules.TelegramBot;
@@ -6,26 +7,14 @@ using PeopleOnDuty.src.Modules.Users;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var telegramToken = builder.Configuration["Telegram:Token"]
     ?? throw new InvalidOperationException("Telegram token not found in configuration");
     Console.WriteLine($"TOKEN: {(string.IsNullOrEmpty(telegramToken) ? "НЕ НАЙДЕН" : "НАЙДЕН")}");
-builder.Services.AddSingleton<IUserStateRepository, InMemoryUserStateRepository>();
-builder.Services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(telegramToken));
-builder.Services.AddScoped<UpdateHandler>();
-builder.Services.AddHostedService<TelegramBotService>();
+builder.Services.AddTelegrammModule(telegramToken);
 
 if (builder.Environment.IsDevelopment())
 {
-    // Для локальной разработки — файл SQLite
-    builder.Services.AddDbContext<TasksContext>(opt =>
-        opt.UseSqlite("Data Source=peopleonduty.db"));
-    builder.Services.AddDbContext<UserContext>(opt =>
-        opt.UseSqlite("Data Source=peopleonduty.db"));
-    builder.Services.AddScoped<ITaskRepository, TaskRepository>();
-    builder.Services.AddScoped<ITaskService, TaskService>();
-    builder.Services.AddScoped<IUserRepository, UserRepository>();
-    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddLocalContext();
 }
 else
 {
