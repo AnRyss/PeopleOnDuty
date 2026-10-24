@@ -2,7 +2,7 @@
 bin/
 obj/
 
-
+peopleonduty.db
 appsettings.Development.json
 appsettings.Local.json
 appsettings.json  

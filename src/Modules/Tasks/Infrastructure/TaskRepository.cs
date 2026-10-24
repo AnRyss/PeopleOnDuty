@@ -9,6 +9,12 @@ public class TaskRepository(TasksContext tasksContext) : ITaskRepository
     {
         return await _tasksContext.Tasks.FirstOrDefaultAsync(t => t.TaskId == guid, ct);
     }
+    public async Task<IReadOnlyList<DutyTask>> GetManyAsync(IReadOnlyCollection<Guid> taskIds, CancellationToken ct)
+{
+    return await _tasksContext.Tasks
+        .Where(t => taskIds.Contains(t.TaskId))
+        .ToListAsync(ct);
+}
     public async Task<IReadOnlyList<DutyTask>> GetByStatusAsync(TaskStatus status, CancellationToken ct)
     {
         return await _tasksContext.Tasks.Where(t => t.Status == status).ToListAsync(ct);
@@ -42,4 +48,12 @@ public class TaskRepository(TasksContext tasksContext) : ITaskRepository
         .SetProperty(t => t.TakenAt, DateTime.UtcNow), ct);
         return succesedOperation == 1;
     }
+
+    public async Task<IReadOnlyList<DutyTask>> GetByAuthorAsync(Guid authorId, CancellationToken ct)
+    {
+        return await _tasksContext.Tasks
+        .Where(t => t.AuthorId == authorId)
+        .ToListAsync(ct);
+    }
+
 }

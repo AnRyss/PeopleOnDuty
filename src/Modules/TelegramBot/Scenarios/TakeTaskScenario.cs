@@ -11,23 +11,18 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
-        {    // 1. Выбор конкретной задачи
+        {    //  Выбор конкретной задачи
             if (update.CallbackQuery is not { } callback) return;
             if (callback.Data.StartsWith("take_task:"))
             {
                 await HandleChosenTask(update, state, ct);
                 state.CurrentState = StateType.MainMenu;
                 await _userStateRepository.SaveAsync(state, ct);
-                return; // ← ВЫХОД
+                return; 
             }
-
-
-
+            // Отображение списка задач
             var chatId = callback.Message!.Chat.Id;
-
-
             await RenderTakenTasks(chatId, state, ct);
-
             await _bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
         }
         public async Task HandleChosenTask(Update update, UserState state, CancellationToken ct)
@@ -59,7 +54,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         }
         public async Task RenderTakenTasks(long chatId, UserState state, CancellationToken ct)
         {
-            var openTasks = await _taskService.GetOpenTasksAsync(ct);
+            var openTasks = await _taskService.GetByStatusAsync(Tasks.TaskStatus.OPENED,ct);
 
             if (openTasks.Count == 0)
             {

@@ -27,7 +27,15 @@ public class UpdateHandler(ScenarioRouter _router, IUserStateRepository userStat
         await userStateRepository.SaveAsync(state, ct);
         return;
     }
-
+ // 2. Кнопки главного меню — из любого состояния
+    if (update.CallbackQuery?.Data is { } data)
+    {
+        if (data is "create_task" or "take_task" or "my_tasks")
+        {
+            state.CurrentState = StateType.MainMenu; // сбрасываем
+            await userStateRepository.SaveAsync(state, ct);
+        }
+    }
 
         await _router.RouteAsync(update, state, ct);
         await userStateRepository.SaveAsync(state, ct);

@@ -1,3 +1,4 @@
+using PeopleOnDuty.src.Modules.TelegramBot.Handlers;
 using PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler;
 using PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 using Telegram.Bot;
@@ -8,6 +9,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     {
         public static IServiceCollection AddTelegrammModule(this IServiceCollection services, string telegramToken)
         {
+            services.AddScoped<PendingActionQueue>(); 
             services.AddScoped<MainMenuScenario>();
             services.AddScoped<CreateTaskScenario>();
             services.AddScoped<CheckTakenTasks>();
