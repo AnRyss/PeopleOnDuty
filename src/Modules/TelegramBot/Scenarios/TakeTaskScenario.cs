@@ -19,11 +19,12 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {    //  Выбор конкретной задачи
-            if (update.CallbackQuery is not { } callback) return;
+            if (update.CallbackQuery is not { } callback || callback.Data is null) return;
+            
             if (callback.Data.StartsWith("take_task:"))
             {
                 await HandleChosenTask(update, state, ct);
-              //  state.CurrentState = StateType.MainMenu;
+    
                 await _userStateRepository.SaveAsync(state, ct);
                 return; 
             }
@@ -54,7 +55,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
                 await _bot.AnswerCallbackQuery(callback.Id, ex.Message, showAlert: true, cancellationToken: ct);
             }
-            catch (Exception e)
+            catch 
             {
                 await _bot.AnswerCallbackQuery(callback.Id, "Ошибка при взятии задачи.", showAlert: true, cancellationToken: ct);
             }

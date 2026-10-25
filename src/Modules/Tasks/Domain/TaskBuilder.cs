@@ -8,7 +8,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
     private DateTime? _untilTime;
 
 
-    public TaskBuilder WithDescription(string description)
+    public TaskBuilder WithDescription(string? description)
     {
         _description = description;
         return this;

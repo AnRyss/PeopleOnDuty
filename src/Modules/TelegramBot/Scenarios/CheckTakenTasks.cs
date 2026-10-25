@@ -32,7 +32,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         }
         public async Task HandleChosenTakenTask(Update update, UserState state, CancellationToken ct)
         {
-            if (update.CallbackQuery is not { } callback) return;
+            if (update.CallbackQuery is not { } callback || callback.Data is null) return;
             if (!callback.Data.StartsWith("taken_task:")) return;
             Guid.TryParse(callback.Data.Substring("taken_task:".Length), out var taskId);
             var task = await taskService.GetTaskAsync(taskId, ct);
@@ -57,7 +57,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             var buttons = new List<InlineKeyboardButton[]>();
             var author = await userService.GetUserAsync(task.Value.AuthorId, ct);
             var tgAuthorId = author?.TelegramId;
-            InlineKeyboardButton[] tgUrlButton;
+            
             if (tgAuthorId is null)
             {
                 buttons.Add(new[]
@@ -76,7 +76,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         });
             }
 
-            // Кнопка "Назад"
+            
             buttons.Add(new[]
             {
         InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")
