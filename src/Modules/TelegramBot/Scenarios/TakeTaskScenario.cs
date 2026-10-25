@@ -5,9 +5,16 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
-    public class TakeTaskScenario(ITaskService _taskService, ITelegramBotClient _bot, IUserService _userService, IUserStateRepository _userStateRepository) : IScenario
+    public class TakeTaskScenario(ITaskService _taskService, ITelegramBotClient _bot, 
+    IUserService _userService, IUserStateRepository _userStateRepository) : IScenario
     {
-        public bool CanHandle(StateType state, Update update) => state is StateType.TakeTask;
+        public IEnumerable<string> HandledCallbacks => new[] { "take_task" };
+
+        public bool CanHandleInput(string? waitingForField) => false;
+      
+
+        // public bool CanHandle(StateType state, Update update) => state is StateType.TakeTask;
+
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
@@ -16,7 +23,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             if (callback.Data.StartsWith("take_task:"))
             {
                 await HandleChosenTask(update, state, ct);
-                state.CurrentState = StateType.MainMenu;
+              //  state.CurrentState = StateType.MainMenu;
                 await _userStateRepository.SaveAsync(state, ct);
                 return; 
             }
@@ -58,7 +65,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             if (openTasks.Count == 0)
             {
-                state.CurrentState = StateType.MainMenu;
+                //state.CurrentState = StateType.MainMenu;
                 await _userStateRepository.SaveAsync(state, ct);
                 await _bot.SendMessage(chatId, "Сейчас нет открытых задач.", cancellationToken: ct);
 

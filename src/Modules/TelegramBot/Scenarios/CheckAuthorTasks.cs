@@ -7,7 +7,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
     public class CheckAuthorTasks(IUserService userService, ITaskService taskService, ITelegramBotClient bot) : IScenario
     {
-        public bool CanHandle(StateType state, Update update) => state is StateType.AuthorCreatedTasks;
+        public IEnumerable<string> HandledCallbacks => new[] { "author_task" };
+
+        public bool CanHandleInput(string? waitingForField) => false;
+        
+
+        //  public bool CanHandle(StateType state, Update update) => state is StateType.AuthorCreatedTasks;
+
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)

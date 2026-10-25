@@ -6,7 +6,6 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     {
       
       public long TelegramUserId { get; set; }
-    public StateType CurrentState { get; set; } = StateType.MainMenu;
     
     // Временные данные для создания задачи
     public string? DraftName { get; set; }
@@ -14,5 +13,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     public string? DraftReward { get; set; }
     public bool DraftIsPublic { get; set; } = false; 
     public string? WaitingForField { get; set; } 
+    public void resetDraft()
+    {
+     DraftName = null;
+    DraftDescription = null;
+    DraftReward = null;
+    DraftIsPublic = false;
+    WaitingForField = null;
+    }
     }
 }

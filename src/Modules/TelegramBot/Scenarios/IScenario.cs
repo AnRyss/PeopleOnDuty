@@ -5,8 +5,9 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
 {
     public interface IScenario
     {
-        public bool CanHandle(StateType state, Update update);
-        public  Task HandleAsync(Update update, UserState state, CancellationToken ct);
+        public IEnumerable<string> HandledCallbacks { get; }
+        public bool CanHandleInput(string? waitingForField);
+        public Task HandleAsync(Update update, UserState state, CancellationToken ct);
 
     }
 }

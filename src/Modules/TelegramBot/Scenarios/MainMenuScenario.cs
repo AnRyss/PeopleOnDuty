@@ -7,56 +7,43 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class MainMenuScenario(ITelegramBotClient _bot, PendingActionQueue _queue,
- IUserStateRepository userStateRepository) : IScenario
+public class MainMenuScenario( ITelegramBotClient _bot,  MainMenuRenderer _mainMenuRenderer) : IScenario
 {
-    public bool CanHandle(StateType state, Update update) =>
-    state is StateType.MainMenu;
-
+    public IEnumerable<string> HandledCallbacks => new[] { "review" };
+    public bool CanHandleInput(string? waitingForField) => false;
 
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
-      
-        
-        // 1. Обработка кнопок главного меню  TODO разделить на классы
-        if (update.CallbackQuery is { } callback)
+        // Текстовые команды
+        if (update.Message?.Text is { } text)
         {
-            var chatId = callback.Message!.Chat.Id;
-
-            switch (callback.Data)
+            switch (text)
             {
-                case "create_task":
-                    state.CurrentState = StateType.CreateTask;
-                    state.DraftName = null;
-                    state.DraftDescription = null;
-                    state.DraftReward = null;
-                    state.DraftIsPublic = false;
-                    await userStateRepository.SaveAsync(state, ct);
-
-                    // Добавляем задачу в роутер — он сам вызовет CreateTaskScenario
-                    _queue.Enqueue(StateType.CreateTask, update, state);
+                case "/menu":
+                case "/start":
+                    await _mainMenuRenderer.SendAsync(update.Message.Chat.Id, ct);
                     break;
-                // Взятие конкретной задачки тут вне рутинга, иначе вечный state = TakeTask. Подумаю потом
-                case var data when data.StartsWith("take_task"):
-                    state.CurrentState = StateType.TakeTask;
-                    await userStateRepository.SaveAsync(state, ct);
-                    _queue.Enqueue(StateType.TakeTask, update, state);
+                case "/tell_about":
+                    await _bot.SendMessage(update.Message.Chat.Id, "Бот гарантирует анонимность, но не гарантирует выполнение обязательств", cancellationToken: ct);
                     break;
-                case var data when data.StartsWith("taken_task"):
-                    state.CurrentState = StateType.CheckTakenTasks;
-                    await userStateRepository.SaveAsync(state, ct);
-                    _queue.Enqueue(StateType.CheckTakenTasks, update, state);
+                case "/help":
+                    await _bot.SendMessage(update.Message.Chat.Id, "Доступные команды: /menu, /help, /tell_about", cancellationToken: ct);
                     break;
-                    case "review":
-                        await _bot.AnswerCallbackQuery(callback.Id,"Пока в разработке!",showAlert: true, cancellationToken: ct);
-                    return;
-                    
+                default:
+                    await _bot.SendMessage(update.Message.Chat.Id, "Неизвестная команда. Нажмите /menu.", cancellationToken: ct);
+                    break;
             }
-
-            await _bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
 
-        
+        // Кнопки
+        if (update.CallbackQuery is { } callback)
+        {
+            if (callback.Data == "review")
+            {
+                await _bot.AnswerCallbackQuery(callback.Id, "Пока в разработке!", showAlert: true, cancellationToken: ct);
+            }
+            await _bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+        }
     }
 }

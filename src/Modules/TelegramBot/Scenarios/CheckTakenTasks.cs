@@ -8,15 +8,16 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
     public class CheckTakenTasks(ITaskService taskService, IUserService userService, ITelegramBotClient bot) : IScenario
     {
-        public bool CanHandle(StateType state, Update update) =>
-        state is StateType.CheckTakenTasks;
-
+        public IEnumerable<string> HandledCallbacks => new[] { "taken_task" };
+        // public bool CanHandle(StateType state, Update update) =>
+        //state is StateType.CheckTakenTasks;
+       public bool CanHandleInput(string? waitingForField) => false;
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {
             if (update.CallbackQuery is not { } callback) return;
-            if (callback.Data.StartsWith("taken_task:"))
+            if (callback.Data!.StartsWith("taken_task:"))
             {
                 await HandleChosenTakenTask(update, state, ct);
                 return;
@@ -56,20 +57,17 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             var buttons = new List<InlineKeyboardButton[]>();
             var author = await userService.GetUserAsync(task.Value.AuthorId, ct);
             var tgAuthorId = author?.TelegramId;
+            InlineKeyboardButton[] tgUrlButton;
             if (tgAuthorId is null)
             {
-
-                tgAuthorId = 5328916233;
                 buttons.Add(new[]
                    {
-            InlineKeyboardButton.WithUrl(
-                "👤 (Ошибка, невозможно найти айди автора)Профиль создателя:",
-                $"tg://user?id={tgAuthorId}")
+            InlineKeyboardButton.WithDisabled(
+                "👤 (Ошибка, нет ссылки на автора")
         });
             }
             else
             {
-
                 buttons.Add(new[]
                 {
             InlineKeyboardButton.WithUrl(
@@ -81,7 +79,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             // Кнопка "Назад"
             buttons.Add(new[]
             {
-        InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "my_tasks")
+        InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")
     });
 
             var keyboard = new InlineKeyboardMarkup(buttons);

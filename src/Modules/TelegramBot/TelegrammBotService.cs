@@ -16,7 +16,7 @@ public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provide
     {
         var commands = new[]
 {
-    new BotCommand { Command = "start", Description = "Запустить бота / Главное меню" },
+    new BotCommand { Command = "menu", Description = "Запустить бота / Главное меню" },
     new BotCommand { Command = "tell_about", Description = "Помощь" }
     
 };

@@ -21,7 +21,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             }
 
             // Возвращаемся в меню
-            state.CurrentState = StateType.CreateTask;
+          //  state.CurrentState = StateType.CreateTask;
             state.WaitingForField = null;
             await _userStateRepository.SaveAsync(state, ct);
 
