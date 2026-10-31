@@ -11,6 +11,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
             new[] { InlineKeyboardButton.WithCallbackData("Взять задачу", "take_task") },
             new[] { InlineKeyboardButton.WithCallbackData("Взятые задачи", "taken_task") },
              new[] { InlineKeyboardButton.WithCallbackData("Мои созданные задачи", "author_task") },
+              new[] { InlineKeyboardButton.WithCallbackData("📚 Архив задач", "archive") }
         });
 
         public async Task SendAsync(long chatId, CancellationToken ct)

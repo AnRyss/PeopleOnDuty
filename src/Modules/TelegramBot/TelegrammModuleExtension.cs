@@ -9,7 +9,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     {
         public static IServiceCollection AddTelegrammModule(this IServiceCollection services, string telegramToken)
         {
-           // services.AddScoped<PendingActionQueue>(); 
+            // services.AddScoped<PendingActionQueue>(); 
             services.AddScoped<MainMenuRenderer>();
             services.AddScoped<MainMenuScenario>();
             services.AddScoped<CreateTaskScenario>();
@@ -21,8 +21,9 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
             services.AddScoped<IScenario, CreateTaskScenario>();
             services.AddScoped<IScenario, CheckTakenTasks>();
             services.AddScoped<IScenario, TakeTaskScenario>();
-             services.AddScoped<IScenario, CheckAuthorTasks>();
-
+            services.AddScoped<IScenario, CheckAuthorTasksScenario>();
+            services.AddScoped<IScenario, CheckAuthorTasksScenario>();
+            services.AddScoped<IScenario, ArchiveTaskScenario>();
 
             services.AddScoped<ScenarioRouter>();
             services.AddScoped<UpdateHandler>();

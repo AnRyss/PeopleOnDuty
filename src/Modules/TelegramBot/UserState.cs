@@ -13,6 +13,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     public string? DraftReward { get; set; }
     public bool DraftIsPublic { get; set; } = false; 
     public string? WaitingForField { get; set; } 
+    public string? PendingTaskId {get; set;}
     public void resetDraft()
     {
      DraftName = null;
@@ -20,6 +21,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     DraftReward = null;
     DraftIsPublic = false;
     WaitingForField = null;
+    PendingTaskId = null;
     }
     }
 }

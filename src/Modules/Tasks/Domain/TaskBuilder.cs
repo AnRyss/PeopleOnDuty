@@ -5,12 +5,18 @@ namespace PeopleOnDuty.src.Modules.Tasks
     private string? _description;
     private string? _name;
     private string? _reward;
+    private bool? _isPublic;
     private DateTime? _untilTime;
 
 
     public TaskBuilder WithDescription(string? description)
     {
         _description = description;
+        return this;
+    }
+     public TaskBuilder WithPublicy(bool isPublic)
+    {
+        _isPublic = isPublic;
         return this;
     }
 
@@ -42,11 +48,11 @@ namespace PeopleOnDuty.src.Modules.Tasks
             throw new InvalidOperationException("Reward is required");
         if ( authorId == Guid.Empty)
             throw new InvalidOperationException("AuthorId is required");
-
+        if (_isPublic is null) _isPublic = false;
         
         return string.IsNullOrWhiteSpace(_description)
-            ? new DutyTask(_name!, _reward!, _untilTime, authorId)
-            : new DutyTask(_description!, _name!, _reward!, _untilTime, authorId);
+            ? new DutyTask(_name!, _reward!, _untilTime, authorId, _isPublic.Value)
+            : new DutyTask(_description!, _name!, _reward!, _untilTime, authorId, _isPublic.Value);
     }
     }
 }

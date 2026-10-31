@@ -1,5 +1,3 @@
-using System;
-using Microsoft.EntityFrameworkCore;
 
 namespace PeopleOnDuty.src.Modules.Tasks;
 
@@ -10,22 +8,24 @@ public Guid TaskId { get; init; } = Guid.NewGuid();
 public string? Description{get;private set;}
 public  string Name{get;init;}
 public string Reward {get;init;}
+public bool IsPublic{get;init;}
 public DateTime? UntilTime {get;init;}
 public TaskStatus Status { get; private set; } = TaskStatus.OPENED;
 public Guid? TakenBy{get;private set;} = null;
 public DateTime? TakenAt { get; private set; } = null;
 
-public DutyTask(string description, string name, string reward, DateTime? untilTime, Guid authorId)
+
+    public DutyTask(string description, string name, string reward, DateTime? untilTime, Guid authorId, bool isPublic)
     {
-       
+        IsPublic = isPublic;
         Description = description;
         Name = name;
         Reward = reward;
         UntilTime = untilTime;
         AuthorId = authorId;
     }
-    public DutyTask( string name, string reward, DateTime? untilTime, Guid authorId) {
-          
+    public DutyTask( string name, string reward, DateTime? untilTime, Guid authorId,bool isPublic) {
+           IsPublic = isPublic;
         Description = null;
         Name = name;
         Reward = reward;

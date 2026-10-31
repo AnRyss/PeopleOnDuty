@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PeopleOnDuty.src.Modules.Archive;
 using PeopleOnDuty.src.Modules.Host;
 using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Tasks;
@@ -23,6 +24,7 @@ else
     // Для продакшена — PostgreSQL
     builder.Services.AddTaskModule(connectionString!);
     builder.Services.AddUserModule(connectionString!);
+    builder.Services.AddArchiveModule(connectionString!);
 }
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();

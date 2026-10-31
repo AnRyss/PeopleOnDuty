@@ -7,10 +7,11 @@ namespace PeopleOnDuty.src.Modules.Tasks
         public string? Description;
         public string Reward;
         public Guid AuthorId;
-
+        public bool IsPublic;
 
         public TaskDto(string name, string? description, string reward, Guid authorName, Guid taskId, TaskStatus taskStatus)
         {
+            IsPublic = false;
             Description = description;
             Name = name;
             Reward = reward;
@@ -20,7 +21,17 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
         }
 
+public TaskDto(string name, string? description, string reward, Guid authorName, Guid taskId, TaskStatus taskStatus, bool isPublic)
+        {
+            IsPublic = isPublic;
+            Description = description;
+            Name = name;
+            Reward = reward;
+            AuthorId = authorName;
+            TaskId = taskId;
+            TaskStatus  = taskStatus;
 
+        }
 
 
     }

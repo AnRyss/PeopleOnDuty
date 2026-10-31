@@ -8,13 +8,13 @@ using TaskStatus = PeopleOnDuty.src.Modules.Tasks.TaskStatus;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class CheckAuthorTasks(IUserService userService, ITaskService taskService, ITelegramBotClient bot) : IScenario
+public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService, ITelegramBotClient bot, IUserStateRepository userStateRepository) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[]
     {
-        "author_task",          
-        "complete_task",    
-        "delete_task"        
+        "author_task",
+        "complete_task",
+        "delete_task"
     };
 
     public bool CanHandleInput(string? waitingForField) => false;
@@ -29,7 +29,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
 
         if (data is null) return;
 
-        
+
         if (data == "author_task")
         {
             await RenderAuthorTasks(chatId, state, ct);
@@ -37,7 +37,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
             return;
         }
 
-      
+
         if (data.StartsWith("author_task:"))
         {
             if (!Guid.TryParse(data.Substring("author_task:".Length), out var taskId)) return;
@@ -46,25 +46,16 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
             return;
         }
 
-       
+
         if (data.StartsWith("complete_task:"))
         {
             if (!Guid.TryParse(data.Substring("complete_task:".Length), out var taskId)) return;
 
-            try
-            {
-                await taskService.CompleteTaskAsync(taskId, ct);
-                await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
-                await bot.AnswerCallbackQuery(callback.Id, "Задача завершена!", cancellationToken: ct);
-            }
-            catch (Exception ex)
-            {
-                await bot.AnswerCallbackQuery(callback.Id, ex.Message, showAlert: true, cancellationToken: ct);
-            }
+            await HandleCompleteTaskAsync(chatId, messageId, taskId, state, ct);
             return;
         }
 
-       
+
         if (data.StartsWith("delete_task:"))
         {
             if (!Guid.TryParse(data.Substring("delete_task:".Length), out var taskId)) return;
@@ -78,11 +69,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
                     return;
                 }
 
-                if (task.Value.TaskStatus != TaskStatus.OPENED)
-                {
-                    await bot.AnswerCallbackQuery(callback.Id, "Нельзя удалить: задачу уже взяли.", showAlert: true, cancellationToken: ct);
-                    return;
-                }
+
 
                 await taskService.CancelTaskAsync(taskId, ct);
                 await bot.EditMessageText(chatId, messageId, "🗑 Задача отменена.", cancellationToken: ct);
@@ -142,7 +129,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
 
         var buttons = new List<InlineKeyboardButton[]>();
 
-       
+
         if (t.TaskStatus == TaskStatus.TAKEN)
         {
             buttons.Add(new[]
@@ -151,7 +138,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
             });
         }
 
-       
+
         if (t.TaskStatus == TaskStatus.OPENED)
         {
             buttons.Add(new[]
@@ -160,7 +147,7 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
             });
         }
 
-      
+
         buttons.Add(new[]
         {
             InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "author_task")
@@ -175,5 +162,32 @@ public class CheckAuthorTasks(IUserService userService, ITaskService taskService
             replyMarkup: keyboard,
             parseMode: ParseMode.Markdown,
             cancellationToken: ct);
+    }
+    private async Task HandleCompleteTaskAsync(
+    long chatId, int messageId, Guid taskId, UserState state, CancellationToken ct)
+    {
+        var task = await taskService.GetTaskAsync(taskId, ct);
+        if (task is null)
+        {
+            await bot.EditMessageText(chatId, messageId, "Задача не найдена. Попробуйте еще раз.", cancellationToken: ct);
+            return;
+        }
+        if (task.Value.IsPublic)
+        {
+            state.WaitingForField = "archive_answer";
+            state.PendingTaskId = task.Value.TaskId.ToString();
+            await userStateRepository.SaveAsync(state, ct);
+
+            await bot.EditMessageText(
+                chatId,
+                messageId,
+                "Введите ответ на задачу (он будет сохранён в архиве):",
+                cancellationToken: ct);
+            return;
+        }
+
+
+        await taskService.CompleteTaskAsync(taskId, ct);
+        await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
     }
 }
