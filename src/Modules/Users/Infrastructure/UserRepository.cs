@@ -22,5 +22,9 @@ namespace PeopleOnDuty.src.Modules.Users
       await _userContext.AddAsync(user,ct);
       await _userContext.SaveChangesAsync();
     }
+    public async Task<int> GetCountAsync(CancellationToken ct)
+{
+    return await _userContext.Users.CountAsync(ct);
+}
     }
 }

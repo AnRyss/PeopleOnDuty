@@ -10,5 +10,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
     Task SaveAsync(DutyTask task, CancellationToken ct);
      Task AddAsync(DutyTask task, CancellationToken ct);
     Task<bool> TryTakeAsync(Guid taskId, Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<DutyTask>> GetAllAsync(CancellationToken ct);
+    public Task ChangeDescription(Guid taskId,string desc,CancellationToken ct);
     }
 }

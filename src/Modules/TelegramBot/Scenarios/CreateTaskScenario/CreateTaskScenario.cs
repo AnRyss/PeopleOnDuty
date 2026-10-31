@@ -99,11 +99,12 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             }
             var userGuid = await _userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
             var createdTask = new TaskBuilder()
+            .WithPublicy(state.DraftIsPublic)
             .WithName(state.DraftName)
             .WithDescription(state.DraftDescription)
             .WithReward(state.DraftReward)
             .Build(userGuid.UserId);
-
+            
             await _taskService.CreateTaskAsync(createdTask, ct);
 
             await _userStateRepository.SaveAsync(state, ct);

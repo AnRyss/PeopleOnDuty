@@ -23,6 +23,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
             services.AddScoped<IScenario, TakeTaskScenario>();
             services.AddScoped<IScenario, CheckAuthorTasksScenario>();
             services.AddScoped<IScenario, ArchiveTaskScenario>();
+            services.AddScoped<IScenario, AdminScenario>();
 
             services.AddScoped<ScenarioRouter>();
             services.AddScoped<UpdateHandler>();

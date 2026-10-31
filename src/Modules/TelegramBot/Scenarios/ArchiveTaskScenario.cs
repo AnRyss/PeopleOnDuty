@@ -16,10 +16,11 @@ public class ArchiveTaskScenario(
 
     public IEnumerable<string> HandledCallbacks => new[]
     {
-        "archive",          // открыть архив
-        "archive_page",     // archive_page:{page} — навигация
-        "archive_search",   // archive_search — запросить поиск
-        "archive_back"      // вернуться к списку (без поиска)
+        "archive",
+        "archive_page",
+        "archive_search",
+        "archive_back",
+        "archive_task"
     };
 
     public bool CanHandleInput(string? waitingForField) =>
@@ -27,7 +28,7 @@ public class ArchiveTaskScenario(
 
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
-        // 1. Текст: ответ на задачу при завершении задачи или поисковый запрос
+        // 1. Текст (ввод ответа или поисковый запрос)
         if (update.Message?.Text is { } text)
         {
             if (state.WaitingForField == "archive_answer")
@@ -40,7 +41,7 @@ public class ArchiveTaskScenario(
             {
                 state.WaitingForField = null;
                 await userStateRepository.SaveAsync(state, ct);
-                await RenderArchiveAsync(update.Message.Chat.Id, messageId: null, query: text, page: 1, ct);
+                await RenderArchiveListAsync(update.Message.Chat.Id, messageId: null, query: text, page: 1, ct);
                 return;
             }
         }
@@ -53,7 +54,7 @@ public class ArchiveTaskScenario(
 
         if (data == "archive")
         {
-            await RenderArchiveAsync(chatId, messageId, query: null, page: 1, ct);
+            await RenderArchiveListAsync(chatId, messageId, query: null, page: 1, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
@@ -61,7 +62,7 @@ public class ArchiveTaskScenario(
         if (data.StartsWith("archive_page:"))
         {
             if (!int.TryParse(data.Substring("archive_page:".Length), out var page)) return;
-            await RenderArchiveAsync(chatId, messageId, query: null, page, ct);
+            await RenderArchiveListAsync(chatId, messageId, query: null, page, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
@@ -77,13 +78,24 @@ public class ArchiveTaskScenario(
 
         if (data == "archive_back")
         {
-            await RenderArchiveAsync(chatId, messageId, query: null, page: 1, ct);
+            await RenderArchiveListAsync(chatId, messageId, query: null, page: 1, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+            return;
+        }
+
+        
+        if (data.StartsWith("archive_task:"))
+        {
+            if (!Guid.TryParse(data.Substring("archive_task:".Length), out var entryId)) return;
+            await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+            await RenderArchiveCardAsync(callback,chatId, messageId, entryId, ct);
+
             return;
         }
     }
 
-    private async Task RenderArchiveAsync(
+   
+    private async Task RenderArchiveListAsync(
         long chatId, int? messageId, string? query, int page, CancellationToken ct)
     {
         var (items, total) = await archiveTaskService.SearchAsync(query, page, PageSize, ct);
@@ -98,17 +110,21 @@ public class ArchiveTaskScenario(
         {header}
         
         Найдено: {total} (стр. {page}/{totalPages})
+        Выберите задачу:
         """;
 
-        if (items.Count == 0)
-            text += "\n\nНет задач.";
+        var buttons = new List<InlineKeyboardButton[]>();
 
+        // Кнопки с названиями задач (без награды)
         foreach (var item in items)
         {
-            text += $"\n\n**{item.TaskName}** — {item.Reward}\n_{item.Answer}_";
+            buttons.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    $"📄 {item.TaskName}",
+                    $"archive_task:{item.ArchiveTaskId}")
+            });
         }
-
-        var buttons = new List<InlineKeyboardButton[]>();
 
         // Навигация
         if (totalPages > 1)
@@ -121,7 +137,7 @@ public class ArchiveTaskScenario(
             if (nav.Count > 0) buttons.Add(nav.ToArray());
         }
 
-        // Поиск / сброс
+        // Поиск
         if (string.IsNullOrWhiteSpace(query))
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("🔍 Поиск по названию", "archive_search") });
         else
@@ -133,6 +149,35 @@ public class ArchiveTaskScenario(
             await bot.EditMessageText(chatId, messageId.Value, text, replyMarkup: keyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
         else
             await bot.SendMessage(chatId, text, replyMarkup: keyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
+    }
+
+
+    private async Task RenderArchiveCardAsync(CallbackQuery callback,long chatId, int messageId, Guid archiveTaskId, CancellationToken ct)
+    {
+        
+        var task = await archiveTaskService.GetByIdAsync(archiveTaskId, ct);
+        if (task is null)
+        {
+          await bot.AnswerCallbackQuery(callback.Id,"Задача не найдена.",true, cancellationToken:ct);
+            return;
+        }
+
+        var text = $"""
+        📄 **{task.TaskName}**
+        
+        **Награда:** {task.Reward}
+        **Описание:** {task.TaskDescription ?? "Не задано"}
+        
+        **Ответ:**
+        _{task.Answer}_
+        """;
+
+        var keyboard = new InlineKeyboardMarkup(new[]
+        {
+            new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад к архиву", "archive_back") }
+        });
+
+        await bot.EditMessageText(chatId, messageId, text, replyMarkup: keyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
     }
 
     private async Task HandleArchiveAnswerAsync(

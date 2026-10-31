@@ -23,5 +23,9 @@ namespace PeopleOnDuty.src.Modules.Users
             await _userRepository.AddAsync(newUser, ct);
             return newUser;
         }
+        public async Task<int> GetAllUsersCountAsync(CancellationToken ct)
+        {
+            return await _userRepository.GetCountAsync(ct);
+        }
     }
 }

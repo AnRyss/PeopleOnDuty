@@ -38,10 +38,8 @@ public DateTime? TakenAt { get; private set; } = null;
         throw new InvalidOperationException("Cannot change TakenBy field for completed task");
         TakenBy = newTakenById;
     }
-    public void AddDescription(string desc)
+    public void ChangeDescription(string desc)
     {
-        if (!String.IsNullOrEmpty(Description)) 
-        throw new InvalidOperationException("Description is already there");
         Description = desc;
     }
     public void Take(Guid userId)

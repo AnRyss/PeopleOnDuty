@@ -12,5 +12,6 @@ namespace PeopleOnDuty.src.Modules.Shared
         Task<IReadOnlyList<ArchivedTaskDto>> GetAllAsync(CancellationToken ct);
         Task<(IReadOnlyList<ArchivedTaskDto> Items, int TotalCount)> SearchAsync(
         string? query, int page, int pageSize, CancellationToken ct);
+        Task<ArchivedTaskDto?> GetByIdAsync(Guid id, CancellationToken ct);
     }
 }

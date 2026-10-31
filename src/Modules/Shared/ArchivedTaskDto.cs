@@ -2,6 +2,7 @@ namespace PeopleOnDuty.src.Modules.Shared
 {
    public record ArchivedTaskDto
 {
+     public Guid ArchiveTaskId { get; init; }
     public Guid OriginalTaskId { get; init; }
     public required string TaskName { get; init; }
     public string? TaskDescription { get; init; }

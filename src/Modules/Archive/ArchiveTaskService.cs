@@ -46,7 +46,7 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
 
         private static ArchivedTaskDto ToDto(ArchivedTask task) =>
             new()
-            {
+            {   ArchiveTaskId = task.Id,
                 OriginalTaskId = task.OriginalTaskId,
                 TaskName = task.Name,
                 TaskDescription = task.Description,
@@ -73,6 +73,11 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
                 .ToList();
 
             return (items, total);
+        }
+        public async Task<ArchivedTaskDto?> GetByIdAsync(Guid id, CancellationToken ct)
+        {
+            var task = await _repository.GetByIdAsync(id, ct);
+            return task is null ? null : ToDto(task);
         }
     }
 

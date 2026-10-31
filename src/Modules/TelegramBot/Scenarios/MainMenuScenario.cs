@@ -29,6 +29,9 @@ public class MainMenuScenario( ITelegramBotClient _bot,  MainMenuRenderer _mainM
                 case "/help":
                     await _bot.SendMessage(update.Message.Chat.Id, "Доступные команды: /menu, /help, /tell_about", cancellationToken: ct);
                     break;
+                    case "/admin":
+        
+                    break;
                 default:
                     await _bot.SendMessage(update.Message.Chat.Id, "Неизвестная команда. Нажмите /menu.", cancellationToken: ct);
                     break;

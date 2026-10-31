@@ -12,7 +12,7 @@ namespace PeopleOnDuty.src.Modules.Tasks
         private readonly ITaskRepository _taskRepository = taskRepository;
         public async Task AbandonTaskAsync(Guid taskId, Guid userId, CancellationToken ct)
         {
-            var task = await _taskRepository.GetAsync(taskId,ct) ?? throw new KeyNotFoundException("No such Task");
+            var task = await _taskRepository.GetAsync(taskId, ct) ?? throw new KeyNotFoundException("No such Task");
             if (task.TakenBy != userId)
                 throw new Exception("Ony user that took task can abandon it");
             task.Abandon();
@@ -22,14 +22,14 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
         public async Task CancelTaskAsync(Guid taskId, CancellationToken ct)
         {
-            var task = await _taskRepository.GetAsync(taskId,ct) ?? throw new KeyNotFoundException("No such Task");
+            var task = await _taskRepository.GetAsync(taskId, ct) ?? throw new KeyNotFoundException("No such Task");
             task.Cancel();
             await _taskRepository.SaveAsync(task, ct);
         }
 
         public async Task CompleteTaskAsync(Guid taskId, CancellationToken ct)
         {
-            var task = await _taskRepository.GetAsync(taskId,ct) ?? throw new KeyNotFoundException("No such Task");
+            var task = await _taskRepository.GetAsync(taskId, ct) ?? throw new KeyNotFoundException("No such Task");
             task.Complete();
             await _taskRepository.SaveAsync(task, ct);
         }
@@ -44,26 +44,26 @@ namespace PeopleOnDuty.src.Modules.Tasks
         {
             var tasks = await _taskRepository.GetByTakerAsync(userId, ct);
             return tasks
-       .Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId,t.Status))
+       .Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status, t.IsPublic))
        .ToList();
         }
 
-        public async Task<IReadOnlyList<TaskDto>> GetByStatusAsync(TaskStatus status,CancellationToken ct)
+        public async Task<IReadOnlyList<TaskDto>> GetByStatusAsync(TaskStatus status, CancellationToken ct)
         {
             var tasks = await _taskRepository.GetByStatusAsync(status, ct);
-            return tasks.Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status))
+            return tasks.Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status, t.IsPublic))
             .ToList();
         }
 
         public async Task TakeTaskAsync(Guid taskId, Guid userId, CancellationToken ct)
-        {   
-            
+        {
+
 
             var task = await _taskRepository.GetAsync(taskId, ct)
         ?? throw new Exception($"Task {taskId} not found");
 
             if (task.AuthorId == userId)
-            throw new InvalidOperationException("Author can not take his own task");
+                throw new InvalidOperationException("Author can not take his own task");
 
             task.Take(userId);
 
@@ -75,22 +75,43 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
         public async Task<IReadOnlyList<TaskDto>> GetTasksAsync(IReadOnlyCollection<Guid> TasksId, CancellationToken ct)
         {
-             var tasks = await _taskRepository.GetManyAsync(TasksId, ct);
-            return tasks.Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status))
+            var tasks = await _taskRepository.GetManyAsync(TasksId, ct);
+            return tasks.Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status, t.IsPublic))
             .ToList();
         }
 
         public async Task<TaskDto?> GetTaskAsync(Guid taskId, CancellationToken ct)
         {
-          var task = await _taskRepository.GetAsync(taskId, ct);
-            return new TaskDto(name: task.Name, description: task.Description, reward: task.Reward, authorName: task.AuthorId, taskId: task.TaskId, taskStatus: task.Status);
+            var task = await _taskRepository.GetAsync(taskId, ct);
+            return new TaskDto(name: task.Name, description: task.Description, reward: task.Reward, authorName: task.AuthorId, taskId: task.TaskId, taskStatus: task.Status, isPublic: task.IsPublic);
         }
 
-        public async Task<IReadOnlyList<TaskDto>> GetByAuthorAsync(Guid  userId, CancellationToken ct)
+        public async Task<IReadOnlyList<TaskDto>> GetByAuthorAsync(Guid userId, CancellationToken ct)
         {
             var tasks = await _taskRepository.GetByAuthorAsync(userId, ct);
             return tasks.Select(t => new TaskDto(t.Name, t.Description, t.Reward, t.AuthorId, t.TaskId, t.Status))
             .ToList();
         }
+        public async Task<IReadOnlyList<TaskDto>> GetAllTasksAsync(CancellationToken ct)
+        {
+           
+            var tasks = await _taskRepository.GetAllAsync(ct);
+
+            
+            return tasks.Select(t => new TaskDto(
+                t.Name,
+                t.Description,
+                t.Reward,
+                t.AuthorId,
+                t.TaskId,
+                t.Status,
+                t.IsPublic
+            )).ToList();
+        }
+        public async Task ChangeDescription(Guid taskId,string desc,CancellationToken ct)
+        {
+           await _taskRepository.ChangeDescription(taskId,desc,ct);
+        }
     }
+    
 }
