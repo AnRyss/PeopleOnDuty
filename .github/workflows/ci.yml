@@ -17,13 +17,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.x' 
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore PeopleOnDuty.slnx
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build PeopleOnDuty.slnx --no-restore --configuration Release
 
     - name: Run tests
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test tests/PeopleOnDuty.Tests.csproj --no-build --configuration Release --verbosity normal
