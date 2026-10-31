@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="../PeopleOnDuty.Tests/PeopleOnDuty.Tests.csproj" />
-  <Project Path="PeopleOnDuty.csproj" />
+  <Project Path="src/PeopleOnDuty.csproj" />
+  <Project Path="tests/PeopleOnDuty.Tests.csproj" />
 </Solution>
