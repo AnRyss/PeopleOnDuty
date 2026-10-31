@@ -32,10 +32,6 @@ builder.Services.AddControllers();
 
 
 var app = builder.Build();
-//app.UseExceptionHandler();  TODO`
-//app.UseAuthentication();  TODO
-//app.UseAuthorization() TODO
-app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var tasksDb = scope.ServiceProvider.GetRequiredService<TasksContext>();
@@ -43,7 +39,15 @@ using (var scope = app.Services.CreateScope())
 
     var usersDb = scope.ServiceProvider.GetRequiredService<UserContext>();
     await usersDb.Database.MigrateAsync();
+    
+    var archiveDb = scope.ServiceProvider.GetRequiredService<ArchiveTaskContext>();
+    await archiveDb.Database.MigrateAsync();
 }
+//app.UseExceptionHandler();  TODO`
+//app.UseAuthentication();  TODO
+//app.UseAuthorization() TODO
+app.MapControllers();
+
 app.MapOpenApi();
 
 

@@ -11,7 +11,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         public IEnumerable<string> HandledCallbacks => new[] { "taken_task" };
         // public bool CanHandle(StateType state, Update update) =>
         //state is StateType.CheckTakenTasks;
-       public bool CanHandleInput(string? waitingForField) => false;
+        public bool CanHandleInput(string? waitingForField) => false;
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
@@ -28,6 +28,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             await RenderTakenTasks(chatId, state, ct);
             //state.CurrentState = StateType.MainMenu;
             //await userStateRepository.SaveAsync(state, ct);
+            await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
 
         }
         public async Task HandleChosenTakenTask(Update update, UserState state, CancellationToken ct)
@@ -57,7 +58,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             var buttons = new List<InlineKeyboardButton[]>();
             var author = await userService.GetUserAsync(task.Value.AuthorId, ct);
             var tgAuthorId = author?.TelegramId;
-            
+
             if (tgAuthorId is null)
             {
                 buttons.Add(new[]
@@ -76,7 +77,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         });
             }
 
-            
+
             buttons.Add(new[]
             {
         InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")
@@ -100,7 +101,11 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             var takenTasks = await taskService.GetTakenTasksByUserAsync(user.UserId, ct);
 
-
+            if (takenTasks.Count == 0)
+            {
+                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", cancellationToken: ct);
+                return;
+            }
 
             var buttons = takenTasks
                 .Select(t => new[]

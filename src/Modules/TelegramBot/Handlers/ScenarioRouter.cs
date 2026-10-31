@@ -8,6 +8,15 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
     {
         public async Task RouteAsync(Update update, UserState state, CancellationToken ct)
         {
+            if (update.Message?.Text is { } text && text.StartsWith("/"))
+            {
+                var mainMenu = _scenarios.OfType<MainMenuScenario>().FirstOrDefault();
+                if (mainMenu is not null)
+                {
+                    await mainMenu.HandleAsync(update, state, ct);
+                    return; 
+                }
+            }
             var callbackHandled = false;
             // Сначала по коллбэкам
             if (update.CallbackQuery?.Data is { } data)
