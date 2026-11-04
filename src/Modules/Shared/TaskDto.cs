@@ -1,35 +1,40 @@
 namespace PeopleOnDuty.src.Modules.Tasks
 {
     public record struct TaskDto
-    {   public TaskStatus TaskStatus;
+    {
+        public TaskStatus TaskStatus;
         public Guid TaskId;
         public string Name;
         public string? Description;
         public string Reward;
         public Guid AuthorId;
         public bool IsPublic;
-
-        public TaskDto(string name, string? description, string reward, Guid authorName, Guid taskId, TaskStatus taskStatus)
+        public DateTime CreatedAt { get; init; }
+        public TaskDto(string name, string? description, string reward, Guid authorName,
+         Guid taskId, TaskStatus taskStatus, DateTime createdAt)
         {
+            CreatedAt = createdAt;
             IsPublic = false;
             Description = description;
             Name = name;
             Reward = reward;
             AuthorId = authorName;
             TaskId = taskId;
-            TaskStatus  = taskStatus;
+            TaskStatus = taskStatus;
 
         }
 
-public TaskDto(string name, string? description, string reward, Guid authorName, Guid taskId, TaskStatus taskStatus, bool isPublic)
+        public TaskDto(string name, string? description, string reward, Guid authorName, 
+        Guid taskId, TaskStatus taskStatus, bool isPublic, DateTime createdAt)
         {
+            CreatedAt = createdAt;
             IsPublic = isPublic;
             Description = description;
             Name = name;
             Reward = reward;
             AuthorId = authorName;
             TaskId = taskId;
-            TaskStatus  = taskStatus;
+            TaskStatus = taskStatus;
 
         }
 

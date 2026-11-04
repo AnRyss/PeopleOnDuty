@@ -59,7 +59,7 @@ public class ArchiveTaskScenario(
             return;
         }
 
-        if (data.StartsWith("archive_page:"))
+        if (data!.StartsWith("archive_page:"))
         {
             if (!int.TryParse(data.Substring("archive_page:".Length), out var page)) return;
             await RenderArchiveListAsync(chatId, messageId, query: null, page, ct);

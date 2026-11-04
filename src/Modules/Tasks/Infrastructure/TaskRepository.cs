@@ -63,6 +63,11 @@ public class TaskRepository(TasksContext tasksContext) : ITaskRepository
     {
         var task = await GetAsync(taskId, ct) ?? throw new InvalidDataException("No such task");
         task.ChangeDescription(desc);
-       await SaveAsync(task,ct);
+        await SaveAsync(task, ct);
+    }
+    public async Task<bool> HasUserCreatedTaskSinceAsync(Guid userId, DateTime since, CancellationToken ct)
+    {
+        return await _tasksContext.Tasks
+            .AnyAsync(t => t.AuthorId == userId && t.CreatedAt >= since, ct);
     }
 }

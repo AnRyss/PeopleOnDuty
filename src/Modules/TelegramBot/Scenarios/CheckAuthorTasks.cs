@@ -95,6 +95,7 @@ public class CheckAuthorTasksScenario(IUserService userService, ITaskService tas
         }
 
         var buttons = authorTasks
+        .Where(t => t.TaskStatus != TaskStatus.CANCELLED)
             .Select(t => new[]
             {
                 InlineKeyboardButton.WithCallbackData(

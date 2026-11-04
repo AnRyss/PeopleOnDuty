@@ -108,6 +108,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             }
 
             var buttons = takenTasks
+                .Where(t => t.TaskStatus != Tasks.TaskStatus.CANCELLED  || t.TaskStatus != Tasks.TaskStatus.COMPLETED )
                 .Select(t => new[]
                 {
             InlineKeyboardButton.WithCallbackData(

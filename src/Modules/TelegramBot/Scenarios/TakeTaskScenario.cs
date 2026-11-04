@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using PeopleOnDuty.src.Modules.Shared;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -5,28 +6,25 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
-    public class TakeTaskScenario(ITaskService _taskService, ITelegramBotClient _bot, 
+    public class TakeTaskScenario(ITaskService _taskService, ITelegramBotClient _bot,
     IUserService _userService, IUserStateRepository _userStateRepository) : IScenario
     {
         public IEnumerable<string> HandledCallbacks => new[] { "take_task" };
 
         public bool CanHandleInput(string? waitingForField) => false;
-      
-
-        // public bool CanHandle(StateType state, Update update) => state is StateType.TakeTask;
 
 
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {    //  Выбор конкретной задачи
             if (update.CallbackQuery is not { } callback || callback.Data is null) return;
-            
+
             if (callback.Data.StartsWith("take_task:"))
             {
                 await HandleChosenTask(update, state, ct);
-    
+
                 await _userStateRepository.SaveAsync(state, ct);
-                return; 
+                return;
             }
             // Отображение списка задач
             var chatId = callback.Message!.Chat.Id;
@@ -46,7 +44,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 await _bot.EditMessageText(
            chatId: callback.Message!.Chat.Id,
            messageId: callback.Message.Id,
-           "✅ Вы взяли задачу! Свяжитесь с автором для уточнения деталей.",
+           "✅ Вы взяли задачу! Свяжитесь с автором через меню взятых задач.",
            cancellationToken: ct);
                 await _bot.AnswerCallbackQuery(callback.Id, "Задача взята!", cancellationToken: ct);
             }
@@ -55,14 +53,16 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
                 await _bot.AnswerCallbackQuery(callback.Id, ex.Message, showAlert: true, cancellationToken: ct);
             }
-            catch 
+            catch
             {
                 await _bot.AnswerCallbackQuery(callback.Id, "Ошибка при взятии задачи.", showAlert: true, cancellationToken: ct);
             }
         }
         public async Task RenderTakenTasks(long chatId, UserState state, CancellationToken ct)
         {
-            var openTasks = await _taskService.GetByStatusAsync(Tasks.TaskStatus.OPENED,ct);
+            var user = await _userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
+            var openTasks = await _taskService.GetByStatusAsync(Tasks.TaskStatus.OPENED, ct);
+            
 
             if (openTasks.Count == 0)
             {
