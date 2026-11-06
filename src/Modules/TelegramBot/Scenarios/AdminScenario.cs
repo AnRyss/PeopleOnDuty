@@ -99,7 +99,7 @@ public class AdminScenario(
                     replyMarkup: new InlineKeyboardMarkup(taskButtons), parseMode: ParseMode.Markdown, cancellationToken: ct);
                 break;
 
-            case var data when data.StartsWith("admin_delete_confirm:"): // подтверждение удаления
+            case var data when data!.StartsWith("admin_delete_confirm:"): // подтверждение удаления
                 if (!Guid.TryParse(data.Substring("admin_delete_confirm:".Length), out var taskId)) break;
 
                 var confirmKb = new InlineKeyboardMarkup(new[]

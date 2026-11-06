@@ -5,11 +5,10 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
 {
     public class ArchiveTaskService(IArchiveTaskRepository repository) : IArchiveTaskService
     {
-        private readonly IArchiveTaskRepository _repository = repository;
 
         public async Task SaveAsync(ArchivedTaskDto dto, CancellationToken ct)
         {
-            var existing = await _repository.GetByOriginalTaskIdAsync(dto.OriginalTaskId, ct);
+            var existing = await repository.GetByOriginalTaskIdAsync(dto.OriginalTaskId, ct);
             if (existing is not null)
                 throw new InvalidOperationException($"Archive task for {dto.OriginalTaskId} already exists");
 
@@ -21,26 +20,26 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
                 authorId: dto.AuthorId,
                 answer: dto.Answer);
 
-            await _repository.AddAsync(archiveTask, ct);
+            await repository.AddAsync(archiveTask, ct);
 
 
         }
 
         public async Task<ArchivedTaskDto?> GetByOriginalTaskIdAsync(Guid originalTaskId, CancellationToken ct)
         {
-            var task = await _repository.GetByOriginalTaskIdAsync(originalTaskId, ct);
+            var task = await repository.GetByOriginalTaskIdAsync(originalTaskId, ct);
             return task is null ? null : ToDto(task);
         }
 
         public async Task<IReadOnlyList<ArchivedTaskDto>> GetByAuthorAsync(Guid authorId, CancellationToken ct)
         {
-            var tasks = await _repository.GetByAuthorAsync(authorId, ct);
+            var tasks = await repository.GetByAuthorAsync(authorId, ct);
             return tasks.Select(ToDto).ToList();
         }
 
         public async Task<IReadOnlyList<ArchivedTaskDto>> GetAllAsync(CancellationToken ct)
         {
-            var tasks = await _repository.GetAllAsync(ct);
+            var tasks = await repository.GetAllAsync(ct);
             return tasks.Select(ToDto).ToList();
         }
 
@@ -66,7 +65,7 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
         }
         public async Task<ArchivedTaskDto?> GetByIdAsync(Guid id, CancellationToken ct)
         {
-            var task = await _repository.GetByIdAsync(id, ct);
+            var task = await repository.GetByIdAsync(id, ct);
             return task is null ? null : ToDto(task);
         }
     }

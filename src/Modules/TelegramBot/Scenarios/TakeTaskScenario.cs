@@ -86,10 +86,9 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 $"{t.Name}",
                 $"take_task:{t.TaskId}")
                 })
-                .ToArray();
-
+                .ToList();
+            buttons.Add(new[] { mainMenuButton });
             var keyboard = new InlineKeyboardMarkup(buttons);
-            keyboard.AddButton(mainMenuButton);
             await bot.SendMessage(
                 chatId,
                 "Выберите задачу, которую хотите взять:",

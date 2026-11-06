@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class MainMenuScenario( ITelegramBotClient bot,  MainMenuRenderer mainMenuRenderer) : IScenario
+public class MainMenuScenario(ITelegramBotClient bot, MainMenuRenderer mainMenuRenderer, IUserStateRepository userStateRepository) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[] { "review" };
     public bool CanHandleInput(string? waitingForField) => false;
@@ -17,22 +17,33 @@ public class MainMenuScenario( ITelegramBotClient bot,  MainMenuRenderer mainMen
         // Текстовые команды
         if (update.Message?.Text is { } text)
         {
+
             switch (text)
             {
                 case "/menu":
                 case "/start":
+                    state.Reset();
+                    await userStateRepository.SaveAsync(state, ct);
                     await mainMenuRenderer.SendAsync(update.Message.Chat.Id, ct);
                     break;
                 case "/tell_about":
+                    state.Reset();
+                    await userStateRepository.SaveAsync(state, ct);
                     await bot.SendMessage(update.Message.Chat.Id, "Бот гарантирует анонимность, но не гарантирует выполнение обязательств", cancellationToken: ct);
                     break;
                 case "/help":
+                    state.Reset();
+                    await userStateRepository.SaveAsync(state, ct);
                     await bot.SendMessage(update.Message.Chat.Id, "Доступные команды: /menu, /help, /tell_about", cancellationToken: ct);
                     break;
-                    case "/admin":
-        
+                case "/admin":
+                    state.Reset();
+                    await userStateRepository.SaveAsync(state, ct);
+
                     break;
                 default:
+                    state.Reset();
+                    await userStateRepository.SaveAsync(state, ct);
                     await bot.SendMessage(update.Message.Chat.Id, "Неизвестная команда. Нажмите /menu.", cancellationToken: ct);
                     break;
             }
@@ -42,8 +53,8 @@ public class MainMenuScenario( ITelegramBotClient bot,  MainMenuRenderer mainMen
         // Кнопки
         if (update.CallbackQuery is { } callback)
         {
-            
-             
+
+
             if (callback.Data == "review")
             {
                 await bot.AnswerCallbackQuery(callback.Id, "Пока в разработке!", showAlert: true, cancellationToken: ct);
