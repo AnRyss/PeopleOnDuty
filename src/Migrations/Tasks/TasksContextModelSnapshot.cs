@@ -26,6 +26,9 @@ namespace PeopleOnDuty.Migrations.Tasks
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 

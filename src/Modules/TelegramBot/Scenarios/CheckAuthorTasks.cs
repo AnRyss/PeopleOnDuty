@@ -99,7 +99,7 @@ public class CheckAuthorTasksScenario(IUserService userService, ITaskService tas
             .Select(t => new[]
             {
                 InlineKeyboardButton.WithCallbackData(
-                    $"{t.Name} — {t.Reward} ({t.TaskStatus})",
+                    $"{t.Name} ({t.TaskStatus})",
                     $"author_task:{t.TaskId}")
             })
             .ToArray();

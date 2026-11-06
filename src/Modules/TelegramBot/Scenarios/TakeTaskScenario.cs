@@ -77,7 +77,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 .Select(t => new[]
                 {
             InlineKeyboardButton.WithCallbackData(
-                $"{t.Name} — {t.Reward}",
+                $"{t.Name}",
                 $"take_task:{t.TaskId}")
                 })
                 .ToArray();
