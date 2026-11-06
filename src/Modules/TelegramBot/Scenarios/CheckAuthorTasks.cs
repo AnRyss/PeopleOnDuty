@@ -174,7 +174,7 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
             parseMode: ParseMode.Markdown,
             cancellationToken: ct);
     }
-    private async Task HandleCompleteTaskAsync(
+    private async Task HandleCompleteTaskAsync( //callback
     long chatId, int messageId, Guid taskId, UserState state, CancellationToken ct)
     {
         var task = await taskService.GetTaskAsync(taskId, ct);
@@ -198,7 +198,7 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
         }
 
 
-        await taskService.CompleteTaskAsync(taskId, ct);
-        await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
+      //  await taskService.CompleteTaskAsync(taskId, ct);
+      //await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
     }
 }

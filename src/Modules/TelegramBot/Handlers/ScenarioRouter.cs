@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
 {
-    public class ScenarioRouter(IEnumerable<IScenario> _scenarios)
+    public class ScenarioRouter(IEnumerable<IScenario> scenarios, IUserStateRepository userStateRepository)
     {
         public async Task RouteAsync(Update update, UserState state, CancellationToken ct)
         {
@@ -13,7 +13,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
             {
                 if (update.Message?.Text == "/admin")
                 {
-                    var adminScenario = _scenarios.OfType<AdminScenario>().FirstOrDefault();
+                    var adminScenario = scenarios.OfType<AdminScenario>().FirstOrDefault();
                     if (adminScenario is not null)
                     {
                         await adminScenario.HandleAsync(update, state, ct);
@@ -21,7 +21,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
                     }
                     return;
                 }
-                    var mainMenu = _scenarios.OfType<MainMenuScenario>().FirstOrDefault();
+                    var mainMenu = scenarios.OfType<MainMenuScenario>().FirstOrDefault();
                     if (mainMenu is not null)
                     {
                         await mainMenu.HandleAsync(update, state, ct);
@@ -31,8 +31,10 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
                 var callbackHandled = false;
                 // Сначала по коллбэкам
                 if (update.CallbackQuery?.Data is { } data)
-                {
-                    var scenarioByCallback = _scenarios.FirstOrDefault(s =>
+                {   
+                    state.ResetAllButDraft();
+                    await userStateRepository.SaveAsync(state,ct);
+                    var scenarioByCallback = scenarios.FirstOrDefault(s =>
                         s.HandledCallbacks.Contains(data) ||
                         s.HandledCallbacks.Any(c => data.StartsWith(c + ":")));
 
@@ -47,7 +49,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
                 //  И по инпутам
                 if (callbackHandled is false)
                 {
-                    var scenario = _scenarios.FirstOrDefault(s => s.CanHandleInput(state.WaitingForField));
+                    var scenario = scenarios.FirstOrDefault(s => s.CanHandleInput(state.WaitingForField));
                     if (scenario is not null)
                         await scenario.HandleAsync(update, state, ct);
                 }

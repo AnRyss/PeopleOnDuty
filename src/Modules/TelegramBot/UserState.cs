@@ -24,5 +24,10 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
       WaitingForField = null;
       PendingTaskId = null;
     }
+    public void ResetAllButDraft()
+    {
+      WaitingForField = null;
+      PendingTaskId = null;
+    }
   }
 }

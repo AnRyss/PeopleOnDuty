@@ -6,7 +6,7 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
     public class ArchiveTaskService(IArchiveTaskRepository repository) : IArchiveTaskService
     {
 
-        public async Task SaveAsync(ArchivedTaskDto dto, CancellationToken ct)
+        public async Task<Guid> SaveAsync(ArchivedTaskDto dto, CancellationToken ct)
         {
             var existing = await repository.GetByOriginalTaskIdAsync(dto.OriginalTaskId, ct);
             if (existing is not null)
@@ -20,11 +20,14 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
                 authorId: dto.AuthorId,
                 answer: dto.Answer);
 
-            await repository.AddAsync(archiveTask, ct);
+            return await repository.AddAsync(archiveTask, ct);
 
 
         }
-
+        public async Task DeleteAsync(Guid archiveTaskId, CancellationToken ct)
+        {
+            await repository.DeleteAsync(archiveTaskId,ct);
+        }
         public async Task<ArchivedTaskDto?> GetByOriginalTaskIdAsync(Guid originalTaskId, CancellationToken ct)
         {
             var task = await repository.GetByOriginalTaskIdAsync(originalTaskId, ct);

@@ -7,16 +7,23 @@ public class ArchiveTaskRepository(ArchiveTaskContext context) : IArchiveTaskRep
 {
     private readonly ArchiveTaskContext _context = context;
 
-    public async Task AddAsync(ArchivedTask task, CancellationToken ct)
-    {
+    public async Task<Guid> AddAsync(ArchivedTask task, CancellationToken ct)
+    {       
         _context.ArchiveTasks.Add(task);
         await _context.SaveChangesAsync(ct);
+        return task.Id;
     }
-
-    public async Task<ArchivedTask?> GetByIdAsync(Guid id, CancellationToken ct)
+    public async Task DeleteAsync(Guid archiveTaskId, CancellationToken ct)
+    {
+        var task = await GetByIdAsync(archiveTaskId,ct);
+        if (task is null) throw new KeyNotFoundException("No such task");
+        _context.ArchiveTasks.Remove(task);
+        await _context.SaveChangesAsync(ct);
+    }
+    public async Task<ArchivedTask?> GetByIdAsync(Guid archiveTaskId, CancellationToken ct)
     {
         return await _context.ArchiveTasks
-            .FirstOrDefaultAsync(x => x.Id == id, ct);
+            .FirstOrDefaultAsync(x => x.Id == archiveTaskId, ct);
     }
 
     public async Task<ArchivedTask?> GetByOriginalTaskIdAsync(Guid originalTaskId, CancellationToken ct)

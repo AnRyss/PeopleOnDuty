@@ -208,9 +208,16 @@ public class ArchiveTaskScenario(
             CompletedAt = DateTime.UtcNow
         };
 
-        await archiveTaskService.SaveAsync(dto, ct);
+       var savedArchiveId  = await archiveTaskService.SaveAsync(dto, ct);
+       try{
         await taskService.CompleteTaskAsync(taskId, ct);
-
+       }
+       catch (Exception)
+        {
+            await archiveTaskService.DeleteAsync(savedArchiveId, ct);
+        await bot.SendMessage(update.Message!.Chat.Id, "Ошибка при завершении задачи. Попробуйте позже.", cancellationToken: ct);
+        return;
+        }
         state.WaitingForField = null;
         state.PendingTaskId = null;
         await userStateRepository.SaveAsync(state, ct);
