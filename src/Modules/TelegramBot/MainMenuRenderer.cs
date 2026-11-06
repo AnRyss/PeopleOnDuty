@@ -5,6 +5,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
 {
     public class MainMenuRenderer(ITelegramBotClient bot)
     {
+       // public readonly InlineKeyboardButton ToMainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", callbackDataOrUrl: "to_main_menu");
        public readonly InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(new[]
         {
             new[] { InlineKeyboardButton.WithCallbackData("Создать задачу", "create_task") },

@@ -22,13 +22,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {
-            if (update.Message?.Text is { } text && state.WaitingForField is not null) //INPUT
+            if (update.Message?.Text is not null && state.WaitingForField is not null) //INPUT
             {
                 await HandleTaskCreationInputAsync(update, state, ct);
                 return;
             }
 
-            if (update.CallbackQuery is not { } callback) return; 
+            if (update.CallbackQuery is not { } callback) return;
 
             var chatId = callback.Message!.Chat.Id;
             var messageId = callback.Message.MessageId;
@@ -37,7 +37,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             switch (data)
             {
                 case "create_task":
-                    state.resetDraft();
+                    state.Reset();
                     await _userStateRepository.SaveAsync(state, ct);
                     await RenderTaskCreationMenuAsync(chatId, messageId, state, ct);
                     break;
@@ -71,11 +71,11 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                     break;
 
                 case "cancel_create":
-                    state.resetDraft();
+                    state.Reset();
                     await _userStateRepository.SaveAsync(state, ct);
                     // Возвращаем главное меню ( отредактировать это же сообщение, а перед этим отправить новое с уведомлением, что создание отменено)
-                    var msg = await _bot.SendMessage(chatId, "Создание задачи отменено.", cancellationToken: ct);
-                    await mainMenuRenderer.EditAsync(chatId, msg.Id, ct);
+                   // var msg = await _bot.SendMessage(chatId, "Создание задачи отменено.", cancellationToken: ct);
+                    await mainMenuRenderer.EditAsync(chatId, messageId, ct);
                     //  queue.Enqueue(StateType.MainMenu, update, state);
 
                     break;
@@ -104,13 +104,19 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             .WithDescription(state.DraftDescription)
             .WithReward(state.DraftReward)
             .Build(userGuid.UserId);
-            
-            await _taskService.CreateTaskAsync(createdTask, ct);
+            try
+            {
+                await _taskService.CreateTaskAsync(createdTask, ct);
+                await _userStateRepository.SaveAsync(state, ct);
+                await _bot.EditMessageText(callback.Message!.Chat.Id, callback.Message.Id, $"Задача '{state.DraftName}' создана!", cancellationToken: ct);
+                state.Reset();
+            }
+            catch (InvalidOperationException ex)
+            {
+                await _bot.AnswerCallbackQuery(callback.Id, ex.Message, showAlert: true, cancellationToken: ct);
+                return false;
+            }
 
-            await _userStateRepository.SaveAsync(state, ct);
-            await _bot.EditMessageText(callback.Message!.Chat.Id, callback.Message.Id, $"Задача '{state.DraftName}' создана!", cancellationToken: ct);
-            //state.CurrentState = StateType.MainMenu;
-            state.resetDraft();
             return true;
         }
 

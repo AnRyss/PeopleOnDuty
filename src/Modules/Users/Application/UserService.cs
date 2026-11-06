@@ -27,5 +27,9 @@ namespace PeopleOnDuty.src.Modules.Users
         {
             return await _userRepository.GetCountAsync(ct);
         }
+        public async Task<IReadOnlyList<long>> GetTelegramIdsBatchAsync(int skip, int take, CancellationToken ct)
+        {
+            return await _userRepository.GetTelegramIdsBatchAsync(skip,take,ct);
+        }
     }
 }

@@ -8,13 +8,15 @@ using TaskStatus = PeopleOnDuty.src.Modules.Tasks.TaskStatus;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService, ITelegramBotClient bot, IUserStateRepository userStateRepository) : IScenario
+public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService, 
+ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRenderer mainMenuRenderer) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[]
     {
         "author_task",
         "complete_task",
-        "delete_task"
+        "delete_task",
+        "author_task_back"
     };
 
     public bool CanHandleInput(string? waitingForField) => false;
@@ -33,6 +35,12 @@ public class CheckAuthorTasksScenario(IUserService userService, ITaskService tas
         if (data == "author_task")
         {
             await RenderAuthorTasks(chatId, state, ct);
+            await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+            return;
+        }
+        if (data == "author_task_back")
+        {
+            await mainMenuRenderer.EditAsync(chatId,messageId,ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
@@ -85,12 +93,14 @@ public class CheckAuthorTasksScenario(IUserService userService, ITaskService tas
 
     private async Task RenderAuthorTasks(long chatId, UserState state, CancellationToken ct)
     {
+        var mainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", callbackDataOrUrl: "author_task_back");
+        var mainMenuKeyboard =  new InlineKeyboardMarkup(mainMenuButton);
         var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
         var authorTasks = await taskService.GetByAuthorAsync(user.UserId, ct);
 
         if (authorTasks.Count == 0)
         {
-            await bot.SendMessage(chatId, "У вас нет созданных задач.", cancellationToken: ct);
+            await bot.SendMessage(chatId, "У вас нет созданных задач.", replyMarkup: mainMenuKeyboard, cancellationToken: ct);
             return;
         }
 
@@ -102,10 +112,10 @@ public class CheckAuthorTasksScenario(IUserService userService, ITaskService tas
                     $"{t.Name} ({t.TaskStatus})",
                     $"author_task:{t.TaskId}")
             })
-            .ToArray();
-
+            .ToList();
+           buttons.Add(new[] { mainMenuButton });
         var keyboard = new InlineKeyboardMarkup(buttons);
-
+       
         await bot.SendMessage(
             chatId,
             "Выберите задачу, которую хотите посмотреть:",

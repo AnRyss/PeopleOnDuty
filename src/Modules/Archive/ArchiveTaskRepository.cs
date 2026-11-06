@@ -39,4 +39,22 @@ public class ArchiveTaskRepository(ArchiveTaskContext context) : IArchiveTaskRep
             .OrderByDescending(x => x.CompletedAt)
             .ToListAsync(ct);
     }
+
+    public async Task<(IReadOnlyList<ArchivedTask> Items, int Total)> SearchAsync(string? query, int skip, int take, CancellationToken ct)
+    {
+        var q = _context.ArchiveTasks.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query))
+            q = q.Where(t => t.Name.Contains(query));
+
+        var total = await q.CountAsync(ct);
+
+        var items = await q
+            .OrderByDescending(t => t.CompletedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(ct);
+
+        return (items, total);
+    }
 }

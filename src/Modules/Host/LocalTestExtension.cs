@@ -15,7 +15,6 @@ namespace PeopleOnDuty.src.Modules.Host
             // Для локальной разработки — файл SQLite
             services.AddDbContext<ArchiveTaskContext>((opt =>
             opt.UseSqlite("Data Source=peopleonduty.db")));
-
             services.AddDbContext<TasksContext>(opt =>
                 opt.UseSqlite("Data Source=peopleonduty.db"));
             services.AddDbContext<UserContext>(opt =>

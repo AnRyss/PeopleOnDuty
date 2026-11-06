@@ -46,7 +46,8 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
 
         private static ArchivedTaskDto ToDto(ArchivedTask task) =>
             new()
-            {   ArchiveTaskId = task.Id,
+            {
+                ArchiveTaskId = task.Id,
                 OriginalTaskId = task.OriginalTaskId,
                 TaskName = task.Name,
                 TaskDescription = task.Description,
@@ -56,23 +57,12 @@ namespace PeopleOnDuty.src.Modules.ArchiveTask
                 CompletedAt = task.CompletedAt
             };
         public async Task<(IReadOnlyList<ArchivedTaskDto> Items, int TotalCount)> SearchAsync(
-    string? query, int page, int pageSize, CancellationToken ct)
+        string? query, int page, int pageSize, CancellationToken ct)
         {
-            var all = await _repository.GetAllAsync(ct);
-
-            var filtered = string.IsNullOrWhiteSpace(query)
-                ? all
-                : all.Where(t => t.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            var total = filtered.Count;
-            var items = filtered
-                .OrderByDescending(t => t.CompletedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(ToDto)
-                .ToList();
-
-            return (items, total);
+            var skip = (page - 1) * pageSize;
+            var (items, totalCount) = await repository.SearchAsync(query, skip, pageSize, ct);
+            var dtos = items.Select(ToDto).ToList();
+            return (dtos, totalCount);
         }
         public async Task<ArchivedTaskDto?> GetByIdAsync(Guid id, CancellationToken ct)
         {

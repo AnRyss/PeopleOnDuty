@@ -7,5 +7,6 @@ namespace PeopleOnDuty.src.Modules.Users
         public Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken ct);
         public Task AddAsync(User user, CancellationToken ct);
         Task<int> GetCountAsync(CancellationToken ct);
+        Task<IReadOnlyList<long>> GetTelegramIdsBatchAsync(int skip, int take, CancellationToken ct);
     }
 }

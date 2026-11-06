@@ -8,5 +8,6 @@ namespace PeopleOnDuty.src.Modules.Shared
           public  Task<IReadOnlyCollection<User>> GetUsersAsync(IEnumerable<Guid> guids, CancellationToken ct);
           public  Task<User> GetOrCreateByTelegramIdAsync(long telegramId, CancellationToken ct);
           public Task<int> GetAllUsersCountAsync(CancellationToken ct);
+          public  Task<IReadOnlyList<long>> GetTelegramIdsBatchAsync(int skip, int take, CancellationToken ct);
     }
 }

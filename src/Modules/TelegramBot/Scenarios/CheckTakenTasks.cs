@@ -6,9 +6,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
-    public class CheckTakenTasks(ITaskService taskService, IUserService userService, ITelegramBotClient bot) : IScenario
+    public class CheckTakenTasks(ITaskService taskService, IUserService userService, ITelegramBotClient bot,
+    MainMenuRenderer mainMenuRenderer) : IScenario
     {
-        public IEnumerable<string> HandledCallbacks => new[] { "taken_task" };
+        public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back" };
         // public bool CanHandle(StateType state, Update update) =>
         //state is StateType.CheckTakenTasks;
         public bool CanHandleInput(string? waitingForField) => false;
@@ -17,14 +18,20 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {
             if (update.CallbackQuery is not { } callback) return;
+            var chatId = callback.Message!.Chat.Id;
+            var messageId = callback.Message.MessageId;
+            if (callback.Data == "taken_task_back")
+            {
+                await mainMenuRenderer.EditAsync(chatId, messageId, ct);
+                await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+                return;
+            }
             if (callback.Data!.StartsWith("taken_task:"))
             {
                 await HandleChosenTakenTask(update, state, ct);
                 return;
             }
-            var chatId = callback.Message!.Chat.Id;
-            var messageId = callback.Message.MessageId;
-            var data = callback.Data;
+
             await RenderTakenTasks(chatId, state, ct);
             //state.CurrentState = StateType.MainMenu;
             //await userStateRepository.SaveAsync(state, ct);
@@ -98,27 +105,27 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         public async Task RenderTakenTasks(long chatId, UserState state, CancellationToken ct)
         {
             var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
-
+            var toMainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", "taken_task_back");
             var takenTasks = await taskService.GetTakenTasksByUserAsync(user.UserId, ct);
 
             if (takenTasks.Count == 0)
             {
-                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", cancellationToken: ct);
+                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", replyMarkup:toMainMenuButton, cancellationToken: ct);
                 return;
             }
 
             var buttons = takenTasks
-                .Where(t => t.TaskStatus != Tasks.TaskStatus.CANCELLED  || t.TaskStatus != Tasks.TaskStatus.COMPLETED )
+                .Where(t => t.TaskStatus != Tasks.TaskStatus.CANCELLED && t.TaskStatus != Tasks.TaskStatus.COMPLETED)
                 .Select(t => new[]
                 {
             InlineKeyboardButton.WithCallbackData(
-                $"{t.Name} — {t.Reward}",
+                $"{t.Name}",
                 $"taken_task:{t.TaskId}")
                 })
                 .ToArray();
 
             var keyboard = new InlineKeyboardMarkup(buttons);
-
+            keyboard.AddButton("⬅️ В главное меню", "taken_task_back");
             await bot.SendMessage(
                 chatId,
                 "Выберите задачу, которую хотите посмотреть:",

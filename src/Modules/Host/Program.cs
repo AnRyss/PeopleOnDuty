@@ -8,6 +8,7 @@ using PeopleOnDuty.src.Modules.Users;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Environment.EnvironmentName = Environments.Development;
 var telegramToken = builder.Configuration["Telegram:Token"]
     ?? throw new InvalidOperationException("Telegram token not found in configuration");
     Console.WriteLine($"TOKEN: {(string.IsNullOrEmpty(telegramToken) ? "НЕ НАЙДЕН" : "НАЙДЕН")}");

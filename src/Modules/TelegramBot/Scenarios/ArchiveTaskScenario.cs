@@ -10,7 +10,8 @@ public class ArchiveTaskScenario(
     IUserStateRepository userStateRepository,
     ITaskService taskService,
     IArchiveTaskService archiveTaskService,
-    ITelegramBotClient bot) : IScenario
+    ITelegramBotClient bot,
+    MainMenuRenderer mainMenuRenderer) : IScenario
 {
     private const int PageSize = 5;
 
@@ -20,7 +21,8 @@ public class ArchiveTaskScenario(
         "archive_page",
         "archive_search",
         "archive_back",
-        "archive_task"
+        "archive_task",
+        "archive_back_menu"
     };
 
     public bool CanHandleInput(string? waitingForField) =>
@@ -82,19 +84,24 @@ public class ArchiveTaskScenario(
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
+        if (data == "archive_back_menu")
+        {
+            await mainMenuRenderer.EditAsync(chatId,messageId,ct);
+            await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+            return;
+        }
 
-        
         if (data.StartsWith("archive_task:"))
         {
             if (!Guid.TryParse(data.Substring("archive_task:".Length), out var entryId)) return;
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
-            await RenderArchiveCardAsync(callback,chatId, messageId, entryId, ct);
+            await RenderArchiveCardAsync(callback, chatId, messageId, entryId, ct);
 
             return;
         }
     }
 
-   
+
     private async Task RenderArchiveListAsync(
         long chatId, int? messageId, string? query, int page, CancellationToken ct)
     {
@@ -143,6 +150,7 @@ public class ArchiveTaskScenario(
         else
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ Ко всему архиву", "archive_back") });
 
+        buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("⬅️ В главное меню", "archive_back_menu") });
         var keyboard = new InlineKeyboardMarkup(buttons);
 
         if (messageId.HasValue)
@@ -152,13 +160,13 @@ public class ArchiveTaskScenario(
     }
 
 
-    private async Task RenderArchiveCardAsync(CallbackQuery callback,long chatId, int messageId, Guid archiveTaskId, CancellationToken ct)
+    private async Task RenderArchiveCardAsync(CallbackQuery callback, long chatId, int messageId, Guid archiveTaskId, CancellationToken ct)
     {
-        
+
         var task = await archiveTaskService.GetByIdAsync(archiveTaskId, ct);
         if (task is null)
         {
-          await bot.AnswerCallbackQuery(callback.Id,"Задача не найдена.",true, cancellationToken:ct);
+            await bot.AnswerCallbackQuery(callback.Id, "Задача не найдена.", true, cancellationToken: ct);
             return;
         }
 

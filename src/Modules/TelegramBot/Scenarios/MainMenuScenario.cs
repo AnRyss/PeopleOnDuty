@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class MainMenuScenario( ITelegramBotClient _bot,  MainMenuRenderer _mainMenuRenderer) : IScenario
+public class MainMenuScenario( ITelegramBotClient bot,  MainMenuRenderer mainMenuRenderer) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[] { "review" };
     public bool CanHandleInput(string? waitingForField) => false;
@@ -21,19 +21,19 @@ public class MainMenuScenario( ITelegramBotClient _bot,  MainMenuRenderer _mainM
             {
                 case "/menu":
                 case "/start":
-                    await _mainMenuRenderer.SendAsync(update.Message.Chat.Id, ct);
+                    await mainMenuRenderer.SendAsync(update.Message.Chat.Id, ct);
                     break;
                 case "/tell_about":
-                    await _bot.SendMessage(update.Message.Chat.Id, "Бот гарантирует анонимность, но не гарантирует выполнение обязательств", cancellationToken: ct);
+                    await bot.SendMessage(update.Message.Chat.Id, "Бот гарантирует анонимность, но не гарантирует выполнение обязательств", cancellationToken: ct);
                     break;
                 case "/help":
-                    await _bot.SendMessage(update.Message.Chat.Id, "Доступные команды: /menu, /help, /tell_about", cancellationToken: ct);
+                    await bot.SendMessage(update.Message.Chat.Id, "Доступные команды: /menu, /help, /tell_about", cancellationToken: ct);
                     break;
                     case "/admin":
         
                     break;
                 default:
-                    await _bot.SendMessage(update.Message.Chat.Id, "Неизвестная команда. Нажмите /menu.", cancellationToken: ct);
+                    await bot.SendMessage(update.Message.Chat.Id, "Неизвестная команда. Нажмите /menu.", cancellationToken: ct);
                     break;
             }
             return;
@@ -42,11 +42,13 @@ public class MainMenuScenario( ITelegramBotClient _bot,  MainMenuRenderer _mainM
         // Кнопки
         if (update.CallbackQuery is { } callback)
         {
+            
+             
             if (callback.Data == "review")
             {
-                await _bot.AnswerCallbackQuery(callback.Id, "Пока в разработке!", showAlert: true, cancellationToken: ct);
+                await bot.AnswerCallbackQuery(callback.Id, "Пока в разработке!", showAlert: true, cancellationToken: ct);
             }
-            await _bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
+            await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
         }
     }
 }
