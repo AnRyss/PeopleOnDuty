@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Environment.EnvironmentName = Environments.Development;
 var telegramToken = builder.Configuration["Telegram:Token"]
     ?? throw new InvalidOperationException("Telegram token not found in configuration");
-    Console.WriteLine($"TOKEN: {(string.IsNullOrEmpty(telegramToken) ? "НЕ НАЙДЕН" : "НАЙДЕН")}");
+Console.WriteLine($"TOKEN: {(string.IsNullOrEmpty(telegramToken) ? "НЕ НАЙДЕН" : "НАЙДЕН")}");
 builder.Services.AddTelegrammModule(telegramToken);
 
 if (builder.Environment.IsDevelopment())
@@ -40,13 +40,16 @@ using (var scope = app.Services.CreateScope())
 
     var usersDb = scope.ServiceProvider.GetRequiredService<UserContext>();
     await usersDb.Database.MigrateAsync();
-    
+
     var archiveDb = scope.ServiceProvider.GetRequiredService<ArchiveTaskContext>();
     await archiveDb.Database.MigrateAsync();
 }
 //app.UseExceptionHandler();  TODO`
 //app.UseAuthentication();  TODO
 //app.UseAuthorization() TODO
+app.MapUsersEndpoints();
+app.MapTasksEndpoints();
+app.MapArchiveEndpoints();
 app.MapControllers();
 
 app.MapOpenApi();
