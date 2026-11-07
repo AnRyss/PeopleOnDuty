@@ -12,14 +12,14 @@ public class TaskServiceTests
 {
     private readonly Mock<IConfiguration> _configMock = new();
     private readonly Mock<ITaskRepository> _repo = new();
-    private readonly Mock<IUserService> _users = new();
+
     private readonly TaskService _sut;
 
     public TaskServiceTests()
     {
         _configMock.Setup(c => c.GetSection("Tasks:CreationCooldownHours").Value)
              .Returns("1");
-        _sut = new TaskService(_repo.Object, _users.Object,_configMock.Object);
+        _sut = new TaskService(_repo.Object, _configMock.Object);
 
     }
 
@@ -33,7 +33,7 @@ public class TaskServiceTests
         var act = () => _sut.TakeTaskAsync(task.TaskId, authorId, default);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Author can not take his own task");
+            .WithMessage("Cannot take your own task");
     }
 
     [Fact]

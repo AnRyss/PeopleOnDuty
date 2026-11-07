@@ -63,20 +63,27 @@ public class ArchiveTaskServiceTests
                 t.Answer == "answer"),
             default), Times.Once);
     }
-
     [Fact]
     public async Task SearchAsync_FiltersByNameAndPages()
     {
-        _repo.Setup(r => r.GetAllAsync(default)).ReturnsAsync(new List<ArchivedTask>
-        {
-            new(Guid.NewGuid(), "Купить хлеб", null, "r", Guid.NewGuid(), "a"),
-            new(Guid.NewGuid(), "Купить молоко", null, "r", Guid.NewGuid(), "a"),
-            new(Guid.NewGuid(), "Помыть пол", null, "r", Guid.NewGuid(), "a")
-        });
+        // Arrange
+       
+        _repo.Setup(r => r.SearchAsync("Купить", 0, 5, It.IsAny<CancellationToken>()))
+             .ReturnsAsync((
+                 new List<ArchivedTask>
+                 {
+                 new(Guid.NewGuid(), "Купить хлеб", null, "r", Guid.NewGuid(), "a"),
+                 new(Guid.NewGuid(), "Купить молоко", null, "r", Guid.NewGuid(), "a")
+                 },
+                 2 
+             ));
 
+        // Act
         var (items, total) = await _sut.SearchAsync("Купить", 1, 5, default);
 
+        // Assert
         total.Should().Be(2);
+        items.Should().HaveCount(2);
         items.Should().OnlyContain(i => i.TaskName.Contains("Купить"));
     }
 }

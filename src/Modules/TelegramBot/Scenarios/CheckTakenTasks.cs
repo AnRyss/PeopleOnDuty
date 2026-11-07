@@ -9,7 +9,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
     public class CheckTakenTasks(ITaskService taskService, IUserService userService, ITelegramBotClient bot,
     MainMenuRenderer mainMenuRenderer) : IScenario
     {
-        public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back" };
+        public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back","taken_task_abandon"};
         // public bool CanHandle(StateType state, Update update) =>
         //state is StateType.CheckTakenTasks;
         public bool CanHandleInput(string? waitingForField) => false;
@@ -31,7 +31,15 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 await HandleChosenTakenTask(update, state, ct);
                 return;
             }
-
+            if (callback.Data.StartsWith( "taken_task_abandon:"))
+            {
+                Guid.TryParse(callback.Data.Substring("taken_task_abandon:".Length), out var taskId);
+              var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId,ct);
+                await taskService.AbandonTaskAsync(taskId,user.UserId,ct);
+                await bot.DeleteMessage(chatId,messageId,ct);
+                await bot.AnswerCallbackQuery(callback.Id,text: "Вы отказались от задачи",showAlert: true,cancellationToken: ct);
+                return;
+            }
             await RenderTakenTasks(chatId, state, ct);
             //state.CurrentState = StateType.MainMenu;
             //await userStateRepository.SaveAsync(state, ct);
@@ -87,8 +95,8 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             buttons.Add(new[]
             {
-        InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")
-    });
+        InlineKeyboardButton.WithCallbackData("Отказаться от задачи", $"taken_task_abandon:{task.Value.TaskId}"), 
+        InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")});
 
             var keyboard = new InlineKeyboardMarkup(buttons);
 
