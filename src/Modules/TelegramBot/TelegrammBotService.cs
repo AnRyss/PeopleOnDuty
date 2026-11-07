@@ -7,11 +7,9 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot;
 
-public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provider) : BackgroundService
+public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provider
+,ILogger<TelegramBotService> logger) : BackgroundService
 {
-    private readonly IServiceProvider _provider = provider;
-    private readonly ITelegramBotClient _bot = bot;
-
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         var commands = new[]
@@ -20,13 +18,14 @@ public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provide
     new BotCommand { Command = "tell_about", Description = "Помощь" }
     
 };
-         Console.WriteLine("TelegramBotService STARTED");
-         await _bot.SetMyCommands(commands, cancellationToken: ct);
-        _bot.StartReceiving(
+         logger.LogInformation("TelegramBotService запущен");
+         await bot.SetMyCommands(commands, cancellationToken: ct);
+        bot.StartReceiving(
             updateHandler: HandleUpdateAsync,
             errorHandler: (bot,ex,ct) =>
               {
             Console.WriteLine($"BOT ERROR: {ex.Message}");
+             logger.LogError("Ошибка бота: {exc}", ex.Message);
             return Task.CompletedTask;
         },
             cancellationToken: ct
@@ -36,7 +35,7 @@ public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provide
      private async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken ct)
     {
             Console.WriteLine($"UPDATE RECEIVED: {update.Message?.Text ?? update.CallbackQuery?.Data}");
-        using var scope = _provider.CreateScope();  
+        using var scope = provider.CreateScope();  
         var handler = scope.ServiceProvider.GetRequiredService<UpdateHandler>(); // DI scoped в singletone
         await handler.HandleUpdateAsync(update, ct);
     }

@@ -28,7 +28,12 @@ public class AdminScenario(
     };
 
     public bool CanHandleInput(string? waitingForField) => waitingForField is "admin_broadcast_text";
-
+    private readonly InlineKeyboardMarkup _adminKeyboard = new InlineKeyboardMarkup(new[]
+            {
+                new[] { InlineKeyboardButton.WithCallbackData("📊 Статистика", "admin_stats") },
+                new[] { InlineKeyboardButton.WithCallbackData("🗑 Удалить незавершённые", "admin_unfinished_tasks")},
+                new[] { InlineKeyboardButton.WithCallbackData("📢 Рассылка", "admin_broadcast") }
+            });
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
         // 1. Проверка прав
@@ -44,13 +49,9 @@ public class AdminScenario(
 
         if (update.Message?.Text == "/admin")
         {
-            var keyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[] { InlineKeyboardButton.WithCallbackData("📊 Статистика", "admin_stats") },
-                new[] { InlineKeyboardButton.WithCallbackData("🗑 Удалить незавершённые", "admin_unfinished_tasks")},
-                new[] { InlineKeyboardButton.WithCallbackData("📢 Рассылка", "admin_broadcast") }
-            });
-            await bot.SendMessage(update.Message.Chat.Id, "🛠 **Админ-панель**\nВыберите действие:", replyMarkup: keyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
+        
+            await bot.SendMessage(update.Message.Chat.Id, "🛠 **Админ-панель**\nВыберите действие:",
+             replyMarkup: _adminKeyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
             return;
         }
         if (update.Message?.Text is { } text && state.WaitingForField == "admin_broadcast_text")
@@ -65,12 +66,8 @@ public class AdminScenario(
         switch (callback.Data)
         {
             case "admin_menu":
-                var menuKb = new InlineKeyboardMarkup(new[]
-                {
-                    new[] { InlineKeyboardButton.WithCallbackData("📊 Статистика", "admin_stats") },
-                    new[] { InlineKeyboardButton.WithCallbackData("🗑 Удалить незавершённые", "admin_unfinished_tasks") }
-                });
-                await bot.EditMessageText(chatId, messageId, "🛠 **Админ-панель**\nВыберите действие:", replyMarkup: menuKb, parseMode: ParseMode.Markdown, cancellationToken: ct);
+               
+                await bot.EditMessageText(chatId, messageId, "🛠 **Админ-панель**\nВыберите действие:", replyMarkup: _adminKeyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
                 break;
 
             case "admin_stats":

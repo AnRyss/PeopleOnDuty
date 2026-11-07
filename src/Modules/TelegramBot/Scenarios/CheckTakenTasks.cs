@@ -9,7 +9,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
     public class CheckTakenTasks(ITaskService taskService, IUserService userService, ITelegramBotClient bot,
     MainMenuRenderer mainMenuRenderer) : IScenario
     {
-        public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back","taken_task_abandon"};
+        public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back", "taken_task_abandon" };
         // public bool CanHandle(StateType state, Update update) =>
         //state is StateType.CheckTakenTasks;
         public bool CanHandleInput(string? waitingForField) => false;
@@ -31,13 +31,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 await HandleChosenTakenTask(update, state, ct);
                 return;
             }
-            if (callback.Data.StartsWith( "taken_task_abandon:"))
+            if (callback.Data.StartsWith("taken_task_abandon:"))
             {
                 Guid.TryParse(callback.Data.Substring("taken_task_abandon:".Length), out var taskId);
-              var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId,ct);
-                await taskService.AbandonTaskAsync(taskId,user.UserId,ct);
-                await bot.DeleteMessage(chatId,messageId,ct);
-                await bot.AnswerCallbackQuery(callback.Id,text: "Вы отказались от задачи",showAlert: true,cancellationToken: ct);
+                var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
+                await taskService.AbandonTaskAsync(taskId, user.UserId, ct);
+                await bot.DeleteMessage(chatId, messageId, ct);
+                await bot.AnswerCallbackQuery(callback.Id, text: "Вы отказались от задачи", showAlert: true, cancellationToken: ct);
                 return;
             }
             await RenderTakenTasks(chatId, state, ct);
@@ -95,7 +95,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             buttons.Add(new[]
             {
-        InlineKeyboardButton.WithCallbackData("Отказаться от задачи", $"taken_task_abandon:{task.Value.TaskId}"), 
+        InlineKeyboardButton.WithCallbackData("Отказаться от задачи", $"taken_task_abandon:{task.Value.TaskId}"),
         InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "taken_task")});
 
             var keyboard = new InlineKeyboardMarkup(buttons);
@@ -118,7 +118,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             if (takenTasks.Count == 0)
             {
-                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", replyMarkup:toMainMenuButton, cancellationToken: ct);
+                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", replyMarkup: toMainMenuButton, cancellationToken: ct);
                 return;
             }
 
@@ -130,10 +130,11 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 $"{t.Name}",
                 $"taken_task:{t.TaskId}")
                 })
-                .ToArray();
-
+                .ToList();
+            var mainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", "taken_task_back");
+            buttons.Add(new[] { mainMenuButton });
             var keyboard = new InlineKeyboardMarkup(buttons);
-            keyboard.AddButton("⬅️ В главное меню", "taken_task_back");
+
             await bot.SendMessage(
                 chatId,
                 "Выберите задачу, которую хотите посмотреть:",

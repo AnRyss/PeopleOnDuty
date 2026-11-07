@@ -9,7 +9,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace PeopleOnDuty.src.Modules.TelegramBot;
 
 
-public class UpdateHandler(ScenarioRouter _router, IUserStateRepository userStateRepository)
+public class UpdateHandler(ScenarioRouter router, IUserStateRepository userStateRepository)
 {
 
 
@@ -18,7 +18,7 @@ public class UpdateHandler(ScenarioRouter _router, IUserStateRepository userStat
         var userId = update.Message?.From?.Id ?? update.CallbackQuery?.From.Id;
         if (userId is null) return;
         var state = await userStateRepository.GetOrCreateAsync(userId.Value, ct);
-        await _router.RouteAsync(update, state, ct);
+        await router.RouteAsync(update, state, ct);
         await userStateRepository.SaveAsync(state, ct);
     }
 
