@@ -1,5 +1,6 @@
 using System;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Tasks;
@@ -9,11 +10,18 @@ namespace PeopleOnDuty.src.Tests;
 
 public class TaskServiceTests
 {
+    private readonly Mock<IConfiguration> _configMock = new();
     private readonly Mock<ITaskRepository> _repo = new();
     private readonly Mock<IUserService> _users = new();
     private readonly TaskService _sut;
 
-    public TaskServiceTests() => _sut = new TaskService(_repo.Object, _users.Object);
+    public TaskServiceTests()
+    {
+        _configMock.Setup(c => c.GetSection("Tasks:CreationCooldownHours").Value)
+             .Returns("1");
+        _sut = new TaskService(_repo.Object, _users.Object,_configMock.Object);
+
+    }
 
     [Fact]
     public async Task TakeTaskAsync_WhenUserIsAuthor_Throws()
@@ -84,9 +92,9 @@ public class TaskServiceTests
     new DutyTask("desc", "name", "reward", null, authorId, isPublic);
 
     private static DutyTask CreateTakenTask(Guid authorId, Guid takerId, bool isPublic = false)
-{
-    var task = CreateOpenTask(authorId, isPublic);
-    task.Take(takerId);
-    return task;
-}
+    {
+        var task = CreateOpenTask(authorId, isPublic);
+        task.Take(takerId);
+        return task;
+    }
 }

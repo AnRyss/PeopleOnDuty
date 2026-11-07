@@ -9,7 +9,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
     public partial class CreateTaskScenario(ITelegramBotClient _bot, IUserStateRepository _userStateRepository,
-     IUserService _userService, ITaskService _taskService, MainMenuRenderer mainMenuRenderer) : IScenario
+     IUserService _userService, ITaskService _taskService, MainMenuRenderer mainMenuRenderer, ILogger<CreateTaskScenario> logger) : IScenario
     {
         public bool CanHandleInput(string? waitingForField) =>
     waitingForField is "name" or "desc" or "reward";
@@ -74,7 +74,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                     state.Reset();
                     await _userStateRepository.SaveAsync(state, ct);
                     // Возвращаем главное меню ( отредактировать это же сообщение, а перед этим отправить новое с уведомлением, что создание отменено)
-                   // var msg = await _bot.SendMessage(chatId, "Создание задачи отменено.", cancellationToken: ct);
+                    // var msg = await _bot.SendMessage(chatId, "Создание задачи отменено.", cancellationToken: ct);
                     await mainMenuRenderer.EditAsync(chatId, messageId, ct);
                     //  queue.Enqueue(StateType.MainMenu, update, state);
 
@@ -106,17 +106,28 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             .Build(userGuid.UserId);
             try
             {
-                await _taskService.CreateTaskAsync(createdTask, ct);
+                var createdTaskId = await _taskService.CreateTaskAsync(createdTask, ct);
                 await _userStateRepository.SaveAsync(state, ct);
                 await _bot.EditMessageText(callback.Message!.Chat.Id, callback.Message.Id, $"Задача '{state.DraftName}' создана!", cancellationToken: ct);
-                state.Reset();
+                logger.LogInformation("Пользователь {UserId} успешно создал задачу {TaskId}",
+        state.TelegramUserId, createdTaskId);
             }
             catch (InvalidOperationException ex)
             {
+                logger.LogWarning("Пользователь {UserId} попытался создать задачу, но сработал лимит: {Reason}",
+        state.TelegramUserId, ex.Message);
                 await _bot.AnswerCallbackQuery(callback.Id, ex.Message, showAlert: true, cancellationToken: ct);
                 return false;
             }
+            catch (Exception ex)
+            {
 
+                logger.LogError(ex, "Не удалось создать задачу для пользователя {UserId}",
+                    state.TelegramUserId);
+
+                await _bot.AnswerCallbackQuery(callback.Id, "Внутренняя ошибка сервера.", showAlert: true, cancellationToken: ct);
+                return false;
+            }
             return true;
         }
 

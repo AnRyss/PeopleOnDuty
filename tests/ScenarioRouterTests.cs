@@ -12,12 +12,12 @@ public class ScenarioRouterTests
     [Fact]
     public async Task RouteAsync_WhenCallbackMatchesScenario_CallsIt()
     {
+
         var scenario = new Mock<IScenario>();
         scenario.Setup(s => s.HandledCallbacks).Returns(new[] { "create_task" });
         scenario.Setup(s => s.CanHandleInput(It.IsAny<string?>())).Returns(false);
-
-        var router = new ScenarioRouter(new[] { scenario.Object });
-
+        var stateRepoMock = new Mock<IUserStateRepository>();
+        var router = new ScenarioRouter(new[] { scenario.Object }, stateRepoMock.Object);
         var update = new Update
         {
             CallbackQuery = new CallbackQuery
@@ -38,8 +38,8 @@ public class ScenarioRouterTests
         var scenario = new Mock<IScenario>();
         scenario.Setup(s => s.HandledCallbacks).Returns(Array.Empty<string>());
         scenario.Setup(s => s.CanHandleInput("archive_answer")).Returns(true);
-
-        var router = new ScenarioRouter(new[] { scenario.Object });
+        var stateRepoMock = new Mock<IUserStateRepository>();
+        var router = new ScenarioRouter(new[] { scenario.Object }, stateRepoMock.Object);
 
         var update = new Update { Message = new Message { Text = "answer" } };
 

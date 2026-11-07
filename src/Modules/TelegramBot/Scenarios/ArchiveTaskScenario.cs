@@ -11,7 +11,8 @@ public class ArchiveTaskScenario(
     ITaskService taskService,
     IArchiveTaskService archiveTaskService,
     ITelegramBotClient bot,
-    MainMenuRenderer mainMenuRenderer) : IScenario
+    MainMenuRenderer mainMenuRenderer,
+    ILogger<ArchiveTaskScenario> logger) : IScenario
 {
     private const int PageSize = 5;
 
@@ -212,8 +213,9 @@ public class ArchiveTaskScenario(
        try{
         await taskService.CompleteTaskAsync(taskId, ct);
        }
-       catch (Exception)
-        {
+       catch (Exception ex)
+        {   
+            logger.LogError(ex, "Непредвиденная ошибка при сохранении в архив задачи {taskId}", dto.OriginalTaskId);
             await archiveTaskService.DeleteAsync(savedArchiveId, ct);
         await bot.SendMessage(update.Message!.Chat.Id, "Ошибка при завершении задачи. Попробуйте позже.", cancellationToken: ct);
         return;
@@ -221,7 +223,7 @@ public class ArchiveTaskScenario(
         state.WaitingForField = null;
         state.PendingTaskId = null;
         await userStateRepository.SaveAsync(state, ct);
-
+        logger.LogInformation("Задача {OriginalTaskId} сохранена в архив с айди {ArchiveId}", dto.OriginalTaskId, dto.ArchiveTaskId);
         await bot.SendMessage(update.Message!.Chat.Id, "✅ Задача завершена и сохранена в архив!", cancellationToken: ct);
     }
 }

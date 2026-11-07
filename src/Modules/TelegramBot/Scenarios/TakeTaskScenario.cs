@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 {
     public class TakeTaskScenario(ITaskService taskService, ITelegramBotClient bot,
-    IUserService userService, IUserStateRepository userStateRepository, MainMenuRenderer mainMenuRenderer) : IScenario
+    IUserService userService, IUserStateRepository userStateRepository, MainMenuRenderer mainMenuRenderer, ILogger<TakeTaskScenario> logger) : IScenario
     {
         public IEnumerable<string> HandledCallbacks => new[] { "take_task", "take_task_back" };
 
@@ -53,6 +53,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
            messageId: callback.Message.Id,
            "✅ Вы взяли задачу! Свяжитесь с автором через меню взятых задач.",
            cancellationToken: ct);
+            logger.LogInformation("Пользователь {TgId} взял задачу {TaskId}", state.TelegramUserId, taskGuid);
                 await bot.AnswerCallbackQuery(callback.Id, "Задача взята!", cancellationToken: ct);
             }
             catch (InvalidOperationException ex)

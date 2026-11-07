@@ -1,6 +1,7 @@
 using PeopleOnDuty.src.Modules.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc; // <--- ДОБАВЛЕНО (для [FromServices])
 using Microsoft.AspNetCore.Routing;
 
 namespace PeopleOnDuty.src.Modules.Tasks;
@@ -25,7 +26,11 @@ public static class TasksEndpoints
             return task is null ? Results.NotFound() : Results.Ok(task);
         });
 
-        group.MapPost("/", async (CreateTaskRequest request, ITaskService taskService, ICurrentUser currentUser, CancellationToken ct) =>
+        group.MapPost("/", async (
+            CreateTaskRequest request, 
+            ITaskService taskService, 
+            [FromServices] ICurrentUser currentUser, 
+            CancellationToken ct) =>
         {
             var createdTask = new TaskBuilder()
                 .WithName(request.Name)
@@ -38,7 +43,11 @@ public static class TasksEndpoints
             return Results.Created($"/api/tasks/{taskId}", new { id = taskId });
         });
 
-        group.MapPost("/{id:guid}/take", async (Guid id, ITaskService taskService, ICurrentUser currentUser, CancellationToken ct) =>
+        group.MapPost("/{id:guid}/take", async (
+            Guid id, 
+            ITaskService taskService, 
+            [FromServices] ICurrentUser currentUser, 
+            CancellationToken ct) =>
         {
             await taskService.TakeTaskAsync(id, currentUser.UserId, ct);
             return Results.NoContent();

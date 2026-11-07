@@ -13,7 +13,8 @@ public class AdminScenario(
     IConfiguration config,
     ITaskService taskService,
     IUserService userService,
-    IUserStateRepository userStateRepository) : IScenario
+    IUserStateRepository userStateRepository,
+    ILogger<AdminScenario> logger) : IScenario
 {
 
     public IEnumerable<string> HandledCallbacks => new[]
@@ -112,7 +113,7 @@ public class AdminScenario(
 
             case var data when data!.StartsWith("admin_delete_task:"): // Удаление
                 if (!Guid.TryParse(data.Substring("admin_delete_task:".Length), out var idToDelete)) break;
-                await DeleteTask(callback, idToDelete, ct);
+                await DeleteTask(callback, idToDelete, ct,state);
 
                 break;
             case "admin_broadcast":
@@ -131,6 +132,7 @@ public class AdminScenario(
         int success = 0;
         int failed = 0;
         state.WaitingForField = null;
+        logger.LogWarning("Админ {TgId} запустил рассылку!", state.TelegramUserId);
         await userStateRepository.SaveAsync(state, ct);
         await bot.SendMessage(update.Message!.Chat.Id, "🚀 Рассылка запущена...", cancellationToken: ct);
         await Task.Run(async () =>
@@ -195,7 +197,7 @@ public class AdminScenario(
         var backKb = new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "admin_menu") } });
         await bot.EditMessageText(chatId, messageId, statsText, replyMarkup: backKb, parseMode: ParseMode.Markdown, cancellationToken: ct);
     }
-    private async Task DeleteTask(CallbackQuery callback, Guid idToDelete, CancellationToken ct)
+    private async Task DeleteTask(CallbackQuery callback, Guid idToDelete, CancellationToken ct, UserState state)
     {
         var chatId = callback.Message!.Chat.Id;
         var messageId = callback.Message.MessageId;
@@ -205,6 +207,7 @@ public class AdminScenario(
             await taskService.ChangeDescription(idToDelete, "ВМЕШАЛСЯ АДМИНИСТРАТОР", ct);
             var successKb = new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithCallbackData("⬅️ К списку задач", "admin_unfinished_tasks") } });
             await bot.EditMessageText(chatId, messageId, "✅ Задача успешно отменена (удалена).", replyMarkup: successKb, cancellationToken: ct);
+            logger.LogWarning("Админ {TgId} удалил(отменил) задачу {TaskId}!", state.TelegramUserId, idToDelete);
         }
         catch (Exception ex)
         {

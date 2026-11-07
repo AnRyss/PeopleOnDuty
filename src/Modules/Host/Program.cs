@@ -5,6 +5,7 @@ using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Tasks;
 using PeopleOnDuty.src.Modules.TelegramBot;
 using PeopleOnDuty.src.Modules.Users;
+using Serilog;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,9 +31,20 @@ else
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+builder.Host.UseSerilog();
+
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddHttpContextAccessor();
+
 
 
 var app = builder.Build();
+
+
+
 using (var scope = app.Services.CreateScope())
 {
     var tasksDb = scope.ServiceProvider.GetRequiredService<TasksContext>();
@@ -47,11 +59,13 @@ using (var scope = app.Services.CreateScope())
 //app.UseExceptionHandler();  TODO`
 //app.UseAuthentication();  TODO
 //app.UseAuthorization() TODO
+
+
 app.MapUsersEndpoints();
 app.MapTasksEndpoints();
 app.MapArchiveEndpoints();
 app.MapControllers();
-
+app.UseSerilogRequestLogging();
 app.MapOpenApi();
 
 

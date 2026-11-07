@@ -22,15 +22,14 @@ public class CheckAuthorTasksScenarioTests
                  "name", "desc", "reward",
                  Guid.NewGuid(), taskId,
                  PeopleOnDuty.src.Modules.Tasks.TaskStatus.TAKEN,
-                 isPublic: true));
+                 isPublic: true, DateTime.UtcNow));
 
         var bot = new Mock<ITelegramBotClient>();
         var users = new Mock<IUserService>();
         var states = new Mock<IUserStateRepository>();
 
-        var sut = new CheckAuthorTasksScenario(
-            users.Object, tasks.Object, bot.Object, states.Object);
-
+        var mainMenuRendererMock = new Mock<MainMenuRenderer>(MockBehavior.Loose, bot.Object);
+        var sut = new CheckAuthorTasksScenario(users.Object, tasks.Object, bot.Object, states.Object, mainMenuRendererMock.Object);
         var update = new Update
         {
             CallbackQuery = new CallbackQuery
