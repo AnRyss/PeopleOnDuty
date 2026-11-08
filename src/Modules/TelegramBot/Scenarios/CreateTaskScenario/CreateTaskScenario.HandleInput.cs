@@ -30,12 +30,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             state.WaitingForField = null;
             await _userStateRepository.SaveAsync(state, ct);
-
-
-            // В идеале нужно сохранять messageId меню в state, чтобы редактировать его, но для простоты  новое.
-
-            var sentMsg = await _bot.SendMessage(chatId, "Обновление...", cancellationToken: ct);
-            await RenderTaskCreationMenuAsync(chatId, sentMsg.Id, state, ct);
+            if(state.TempMessageId is null)
+            {
+                var newMsg = await _bot.SendMessage(chatId,"Обновление...",cancellationToken: ct);
+                await RenderTaskCreationMenuAsync(chatId, newMsg.MessageId, state, ct);
+                return;
+            }
+            await RenderTaskCreationMenuAsync(chatId, state.TempMessageId.Value, state, ct);
         }
     }
 }

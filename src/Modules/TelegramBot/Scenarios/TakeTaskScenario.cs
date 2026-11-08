@@ -14,7 +14,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         public bool CanHandleInput(string? waitingForField) => false;
 
 
-
+        private readonly InlineKeyboardButton mainMenuButton = new("⬅️ В главное меню", callbackDataOrUrl: "take_task_back");
         public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
         {    //  Выбор конкретной задачи
             if (update.CallbackQuery is not { } callback || callback.Data is null) return;
@@ -35,7 +35,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             }
             // Отображение списка задач
 
-            await RenderTakenTasks(chatId, state, ct);
+            await RenderTakenTasks(chatId, messageId, state, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
         }
         public async Task HandleChosenTask(Update update, UserState state, CancellationToken ct)
@@ -48,12 +48,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             try
             {
                 await taskService.TakeTaskAsync(taskId: taskGuid, userId: userGuid, ct);
+                var keyboard = new InlineKeyboardMarkup(mainMenuButton);
                 await bot.EditMessageText(
            chatId: callback.Message!.Chat.Id,
            messageId: callback.Message.Id,
-           "✅ Вы взяли задачу! Свяжитесь с автором через меню взятых задач.",
+           "✅ Вы взяли задачу! Свяжитесь с автором через меню взятых задач.", replyMarkup: keyboard,
            cancellationToken: ct);
-            logger.LogInformation("Пользователь {TgId} взял задачу {TaskId}", state.TelegramUserId, taskGuid);
+                logger.LogInformation("Пользователь {TgId} взял задачу {TaskId}", state.TelegramUserId, taskGuid);
                 await bot.AnswerCallbackQuery(callback.Id, "Задача взята!", cancellationToken: ct);
             }
             catch (InvalidOperationException ex)
@@ -63,19 +64,18 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             }
 
         }
-        public async Task RenderTakenTasks(long chatId, UserState state, CancellationToken ct)
+        public async Task RenderTakenTasks(long chatId, int messageId, UserState state, CancellationToken ct)
         {
-            var mainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", callbackDataOrUrl: "take_task_back");
+
             var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
             var openTasks = await taskService.GetByStatusAsync(Tasks.TaskStatus.OPENED, ct);
 
 
             if (openTasks.Count == 0)
             {
-                //state.CurrentState = StateType.MainMenu;
 
                 await userStateRepository.SaveAsync(state, ct);
-                await bot.SendMessage(chatId, "Сейчас нет открытых задач.", replyMarkup: mainMenuButton, cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId, "Сейчас нет открытых задач.", replyMarkup: mainMenuButton, cancellationToken: ct);
 
                 return;
             }
@@ -90,8 +90,8 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 .ToList();
             buttons.Add(new[] { mainMenuButton });
             var keyboard = new InlineKeyboardMarkup(buttons);
-            await bot.SendMessage(
-                chatId,
+            await bot.EditMessageText(
+                chatId, messageId,
                 "Выберите задачу, которую хотите взять:",
                 replyMarkup: keyboard,
                 cancellationToken: ct);

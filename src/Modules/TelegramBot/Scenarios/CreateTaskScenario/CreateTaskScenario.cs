@@ -38,11 +38,11 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             {
                 case "create_task":
                     state.Reset();
+                    state.TempMessageId = messageId;
                     await _userStateRepository.SaveAsync(state, ct);
                     await RenderTaskCreationMenuAsync(chatId, messageId, state, ct);
                     break;
                 case "edit_name":
-                    // state.CurrentState = StateType.CreateTaskInput;
                     state.WaitingForField = "name";
                     await _userStateRepository.SaveAsync(state, ct);
                     // Редактируем сообщение, убираем кнопки, просим текст
@@ -50,14 +50,12 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                     break;
 
                 case "edit_desc":
-                    // state.CurrentState = StateType.CreateTaskInput;
                     state.WaitingForField = "desc";
                     await _userStateRepository.SaveAsync(state, ct);
                     await _bot.EditMessageText(chatId, messageId, "Введите описание задачи:", cancellationToken: ct);
                     break;
 
                 case "edit_reward":
-                    //state.CurrentState = StateType.CreateTaskInput;
                     state.WaitingForField = "reward";
                     await _userStateRepository.SaveAsync(state, ct);
                     await _bot.EditMessageText(chatId, messageId, "Введите награду:", cancellationToken: ct);

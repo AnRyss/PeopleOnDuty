@@ -40,7 +40,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 await bot.AnswerCallbackQuery(callback.Id, text: "Вы отказались от задачи", showAlert: true, cancellationToken: ct);
                 return;
             }
-            await RenderTakenTasks(chatId, state, ct);
+            await RenderTakenTasks(chatId, messageId, state, ct);
             //state.CurrentState = StateType.MainMenu;
             //await userStateRepository.SaveAsync(state, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
@@ -110,7 +110,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         }
 
 
-        public async Task RenderTakenTasks(long chatId, UserState state, CancellationToken ct)
+        public async Task RenderTakenTasks(long chatId, int messageId,UserState state, CancellationToken ct)
         {
             var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
             var toMainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", "taken_task_back");
@@ -118,7 +118,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
 
             if (takenTasks.Count == 0)
             {
-                await bot.SendMessage(chatId, "У вас пока нет взятых задач.", replyMarkup: toMainMenuButton, cancellationToken: ct);
+                await bot.EditMessageText(chatId, messageId, "У вас пока нет взятых задач.", replyMarkup: toMainMenuButton, cancellationToken: ct);
                 return;
             }
 
@@ -135,8 +135,8 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             buttons.Add(new[] { mainMenuButton });
             var keyboard = new InlineKeyboardMarkup(buttons);
 
-            await bot.SendMessage(
-                chatId,
+            await bot.EditMessageText(
+                chatId,messageId, 
                 "Выберите задачу, которую хотите посмотреть:",
                 replyMarkup: keyboard,
                 cancellationToken: ct);

@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using PeopleOnDuty.src.Modules.TelegramBot.Handlers;
 using PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler;
 using PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
+using src.Modules.TelegramBot;
 using Telegram.Bot;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot
@@ -42,6 +43,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
 
             services.AddScoped<ScenarioRouter>();
             services.AddScoped<UpdateHandler>();
+            services.AddSingleton<UserLockProvider>();
             services.AddSingleton<IUserStateRepository, InMemoryUserStateRepository>();
             services.AddSingleton<ITelegramBotClient>(_ => new TelegramBotClient(telegramToken, httpClient));
             services.AddHostedService<TelegramBotService>();

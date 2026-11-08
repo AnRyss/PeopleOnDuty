@@ -8,7 +8,7 @@ using TaskStatus = PeopleOnDuty.src.Modules.Tasks.TaskStatus;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService, 
+public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService,
 ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRenderer mainMenuRenderer) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[]
@@ -34,13 +34,13 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
 
         if (data == "author_task")
         {
-            await RenderAuthorTasks(chatId, state, ct);
+            await RenderAuthorTasks(chatId,messageId, state, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
         if (data == "author_task_back")
         {
-            await mainMenuRenderer.EditAsync(chatId,messageId,ct);
+            await mainMenuRenderer.EditAsync(chatId, messageId, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
@@ -91,16 +91,16 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
         }
     }
 
-    private async Task RenderAuthorTasks(long chatId, UserState state, CancellationToken ct)
+    private async Task RenderAuthorTasks(long chatId, int messageId, UserState state, CancellationToken ct)
     {
         var mainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", callbackDataOrUrl: "author_task_back");
-        var mainMenuKeyboard =  new InlineKeyboardMarkup(mainMenuButton);
+        var mainMenuKeyboard = new InlineKeyboardMarkup(mainMenuButton);
         var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
         var authorTasks = await taskService.GetByAuthorAsync(user.UserId, ct);
 
         if (authorTasks.Count == 0)
         {
-            await bot.SendMessage(chatId, "У вас нет созданных задач.", replyMarkup: mainMenuKeyboard, cancellationToken: ct);
+            await bot.EditMessageText(chatId, messageId, "У вас нет созданных задач.", replyMarkup: mainMenuKeyboard, cancellationToken: ct);
             return;
         }
 
@@ -113,11 +113,11 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
                     $"author_task:{t.TaskId}")
             })
             .ToList();
-           buttons.Add(new[] { mainMenuButton });
+        buttons.Add(new[] { mainMenuButton });
         var keyboard = new InlineKeyboardMarkup(buttons);
-       
-        await bot.SendMessage(
-            chatId,
+
+        await bot.EditMessageText(
+            chatId, messageId,
             "Выберите задачу, которую хотите посмотреть:",
             replyMarkup: keyboard,
             cancellationToken: ct);
@@ -196,9 +196,13 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
                 cancellationToken: ct);
             return;
         }
+        else
+        {
+            await taskService.CompleteTaskAsync(taskId, ct);
+            await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
+        }
 
 
-      //  await taskService.CompleteTaskAsync(taskId, ct);
-      //await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
+
     }
 }

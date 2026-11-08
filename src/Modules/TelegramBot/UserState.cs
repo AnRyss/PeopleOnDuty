@@ -13,10 +13,12 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     public string? DraftReward { get; set; }
     public bool DraftIsPublic { get; set; } = false;
     public string? WaitingForField { get; set; }
+    public int? TempMessageId{get;set;}
     public string? PendingTaskId { get; set; }
 
     public void Reset()
     {
+      TempMessageId = null;
       DraftName = null;
       DraftDescription = null;
       DraftReward = null;
