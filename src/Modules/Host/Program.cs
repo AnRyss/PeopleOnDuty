@@ -57,10 +57,10 @@ using (var scope = app.Services.CreateScope())
     await archiveDb.Database.MigrateAsync();
 }
 //app.UseExceptionHandler();  TODO`
-//app.UseAuthentication();  TODO
-//app.UseAuthorization() TODO
+                                            ;
 
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapUsersEndpoints();
 app.MapTasksEndpoints();
 app.MapArchiveEndpoints();

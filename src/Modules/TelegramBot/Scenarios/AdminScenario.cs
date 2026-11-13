@@ -14,6 +14,7 @@ public class AdminScenario(
     ITaskService taskService,
     IUserService userService,
     IUserStateRepository userStateRepository,
+    IArchiveTaskService archiveTaskService,
     ILogger<AdminScenario> logger) : IScenario
 {
 
@@ -24,7 +25,8 @@ public class AdminScenario(
         "admin_unfinished_tasks",
         "admin_delete_task",
         "admin_delete_confirm",
-       "admin_broadcast"
+       "admin_broadcast",
+       "admin_archive_tasks"
     };
 
     public bool CanHandleInput(string? waitingForField) => waitingForField is "admin_broadcast_text";
@@ -32,7 +34,8 @@ public class AdminScenario(
             {
                 new[] { InlineKeyboardButton.WithCallbackData("📊 Статистика", "admin_stats") },
                 new[] { InlineKeyboardButton.WithCallbackData("🗑 Удалить незавершённые", "admin_unfinished_tasks")},
-                new[] { InlineKeyboardButton.WithCallbackData("📢 Рассылка", "admin_broadcast") }
+                new[] { InlineKeyboardButton.WithCallbackData("📢 Рассылка", "admin_broadcast") },
+                new[] { InlineKeyboardButton.WithCallbackData("🗑 Удалить из архива", "admin_archive_tasks")}
             });
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
@@ -49,7 +52,7 @@ public class AdminScenario(
 
         if (update.Message?.Text == "/admin")
         {
-        
+
             await bot.SendMessage(update.Message.Chat.Id, "🛠 **Админ-панель**\nВыберите действие:",
              replyMarkup: _adminKeyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
             return;
@@ -66,7 +69,7 @@ public class AdminScenario(
         switch (callback.Data)
         {
             case "admin_menu":
-               
+
                 await bot.EditMessageText(chatId, messageId, "🛠 **Админ-панель**\nВыберите действие:", replyMarkup: _adminKeyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
                 break;
 
@@ -110,13 +113,15 @@ public class AdminScenario(
 
             case var data when data!.StartsWith("admin_delete_task:"): // Удаление
                 if (!Guid.TryParse(data.Substring("admin_delete_task:".Length), out var idToDelete)) break;
-                await DeleteTask(callback, idToDelete, ct,state);
+                await DeleteTask(callback, idToDelete, ct, state);
 
                 break;
             case "admin_broadcast":
                 state.WaitingForField = "admin_broadcast_text";
                 await userStateRepository.SaveAsync(state, ct);
                 await bot.EditMessageText(chatId, messageId, "Введите текст сообщения для рассылки:", cancellationToken: ct);
+                break;
+            case "admin_archive_tasks":
                 break;
         }
 
@@ -211,5 +216,9 @@ public class AdminScenario(
             var errorKb = new InlineKeyboardMarkup(new[] { new[] { InlineKeyboardButton.WithCallbackData("⬅️ Назад", "admin_unfinished_tasks") } });
             await bot.EditMessageText(chatId, messageId, $"Ошибка: {ex.Message}", replyMarkup: errorKb, cancellationToken: ct);
         }
+    }
+    private async Task DeleteArchiveTask(CallbackQuery callback, Guid archiveIdToDelete, CancellationToken ct, UserState state)
+    {
+        await archiveTaskService.DeleteAsync(archiveIdToDelete, ct);
     }
 }

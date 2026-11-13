@@ -1,34 +1,35 @@
 using Microsoft.EntityFrameworkCore;
+using src.Modules.Shared;
 
 namespace PeopleOnDuty.src.Modules.Users
 {
   public class UserRepository(UserContext userContext) : IUserRepository
   {
-    private UserContext _userContext = userContext;
+    private UserContext userContext = userContext;
     public async Task<User?> GetUserAsync(Guid userGuid, CancellationToken ct = default)
     {
-      return await _userContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid, ct);
+      return await userContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid, ct);
     }
     public async Task<IReadOnlyCollection<User>> GetUsersAsync(IEnumerable<Guid> guids, CancellationToken ct = default)
     {
-      return await _userContext.Users.Where(u => guids.Contains(u.UserId)).ToListAsync(ct);
+      return await userContext.Users.Where(u => guids.Contains(u.UserId)).ToListAsync(ct);
     }
     public async Task<User?> GetByTelegramIdAsync(long telegramId, CancellationToken ct)
     {
-      return await _userContext.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId, ct);
+      return await userContext.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId, ct);
     }
     public async Task AddAsync(User user, CancellationToken ct)
     {
-      await _userContext.AddAsync(user, ct);
-      await _userContext.SaveChangesAsync();
+      await userContext.Users.AddAsync(user, ct);
+      await userContext.SaveChangesAsync();
     }
     public async Task<int> GetCountAsync(CancellationToken ct)
     {
-      return await _userContext.Users.CountAsync(ct);
+      return await userContext.Users.CountAsync(ct);
     }
     public async Task<IReadOnlyList<long>> GetTelegramIdsBatchAsync(int skip, int take, CancellationToken ct)
     {
-      return await _userContext.Users
+      return await userContext.Users
           .Where(u => u.TelegramId != null)
           .OrderBy(u => u.UserId)
           .Skip(skip)
@@ -36,5 +37,20 @@ namespace PeopleOnDuty.src.Modules.Users
           .Select(u => u.TelegramId!.Value)
           .ToListAsync(ct);
     }
+    public async Task<User> CreateNew(string name, string passwordHash, CancellationToken ct)
+    {
+      var exists = await userContext.Users.FirstOrDefaultAsync(u => u.Name == name, ct);
+      if (exists is null)
+      {
+        var user = new User(name, passwordHash);
+        await AddAsync(user, ct);
+        return user;
+      }
+      else
+      {
+        throw new InvalidOperationException("Пользователь с таким именем уже существует");
+      }
+    }
+   
   }
 }
