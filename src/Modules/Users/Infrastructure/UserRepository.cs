@@ -18,11 +18,7 @@ namespace PeopleOnDuty.src.Modules.Users
     {
       return await userContext.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId, ct);
     }
-    public async Task AddAsync(User user, CancellationToken ct)
-    {
-      await userContext.Users.AddAsync(user, ct);
-      await userContext.SaveChangesAsync();
-    }
+
     public async Task<int> GetCountAsync(CancellationToken ct)
     {
       return await userContext.Users.CountAsync(ct);
@@ -37,20 +33,30 @@ namespace PeopleOnDuty.src.Modules.Users
           .Select(u => u.TelegramId!.Value)
           .ToListAsync(ct);
     }
-    public async Task<User> CreateNew(string name, string passwordHash, CancellationToken ct)
+    public async Task CreateNew(User user, CancellationToken ct)
     {
-      var exists = await userContext.Users.FirstOrDefaultAsync(u => u.Name == name, ct);
+      var exists = await userContext.Users.FirstOrDefaultAsync(u => u.Name == user.Name, ct);
       if (exists is null)
       {
-        var user = new User(name, passwordHash);
-        await AddAsync(user, ct);
-        return user;
+        
+        if (String.IsNullOrEmpty(user.Name))
+        throw new InvalidDataException("Укажите имя");
+        await userContext.Users.AddAsync(user, ct);
+        await userContext.SaveChangesAsync(ct);
       }
       else
       {
         throw new InvalidOperationException("Пользователь с таким именем уже существует");
       }
     }
-   
+    public async Task<User> CreateNew(string name, string passwordHash, CancellationToken ct)
+    {
+      var user = new User(name, passwordHash);
+      await CreateNew(user, ct);
+      return user;
+
+
+    }
+
   }
 }

@@ -4,7 +4,13 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
 {
   public record UserState // Точно не sctruct, кэш полетит
   {
-
+    public UserState(long telegramUserId)
+    {
+      this.TelegramUserId = telegramUserId;
+    }
+    public UserState()
+    {
+    }
     public long TelegramUserId { get; set; }
 
     // Временные данные для создания задачи
@@ -13,7 +19,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
     public string? DraftReward { get; set; }
     public bool DraftIsPublic { get; set; } = false;
     public string? WaitingForField { get; set; }
-    public int? TempMessageId{get;set;}
+    public int? TempMessageId { get; set; }
     public string? PendingTaskId { get; set; }
 
     public void Reset()

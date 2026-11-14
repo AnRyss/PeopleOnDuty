@@ -21,7 +21,7 @@ public class UserServiceTests
         var result = await _sut.GetOrCreateByTelegramIdAsync(123456, default);
 
         result.Should().Be(existing);
-        _repo.Verify(r => r.AddAsync(It.IsAny<User>(), default), Times.Never);
+        _repo.Verify(r => r.CreateNew(It.IsAny<User>(), default), Times.Never);
     }
 
     [Fact]
@@ -32,6 +32,6 @@ public class UserServiceTests
         var result = await _sut.GetOrCreateByTelegramIdAsync(123456, default);
 
         result.TelegramId.Should().Be(123456);
-        _repo.Verify(r => r.AddAsync(It.Is<User>(u => u.TelegramId == 123456), default), Times.Once);
+        _repo.Verify(r => r.CreateNew(It.Is<User>(u => u.TelegramId == 123456), default), Times.Once);
     }
 }
