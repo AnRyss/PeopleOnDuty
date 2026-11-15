@@ -21,7 +21,13 @@ public class TelegramBotService(ITelegramBotClient bot, IServiceProvider provide
 
 };
         logger.LogInformation("TelegramBotService запущен");
+        try {
         await bot.SetMyCommands(commands, cancellationToken: ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Ошибка бота: {exc}", ex.Message);
+        }
         bot.StartReceiving(
            updateHandler: (bot, update, ct) =>
     {

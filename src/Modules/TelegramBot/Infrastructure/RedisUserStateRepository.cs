@@ -20,11 +20,13 @@ namespace src.Modules.TelegramBot.Infrastructure
             var cached = await _db.StringGetAsync(key);
             if (cached.IsNullOrEmpty)
             {
-
-                return new UserState { TelegramUserId = userId };
+                var userState = new UserState { TelegramUserId = userId };
+                await SaveAsync(userState, ct);
+                return userState;
             }
             try
             {
+
                 return JsonSerializer.Deserialize<UserState>(cached.ToString())
                        ?? new UserState { TelegramUserId = userId };
             }

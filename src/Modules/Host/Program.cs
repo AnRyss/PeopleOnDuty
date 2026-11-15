@@ -6,18 +6,19 @@ using PeopleOnDuty.src.Modules.Tasks;
 using PeopleOnDuty.src.Modules.TelegramBot;
 using PeopleOnDuty.src.Modules.Users;
 using Serilog;
-using Telegram.Bot;
+using src.Modules.Host;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Environment.EnvironmentName = Environments.Development;
 var telegramToken = builder.Configuration["Telegram:Token"]
     ?? throw new InvalidOperationException("Telegram token not found in configuration");
-Console.WriteLine($"TOKEN: {(string.IsNullOrEmpty(telegramToken) ? "НЕ НАЙДЕН" : "НАЙДЕН")}");
 builder.Services.AddTelegrammModule(telegramToken);
 
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddLocalContext();
+
 }
 else
 {
@@ -35,15 +36,9 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 builder.Host.UseSerilog();
-
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddHttpContextAccessor();
-
-
-
+builder.Services.AddAuthModule(builder.Configuration);
 var app = builder.Build();
-
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -67,7 +62,13 @@ app.MapArchiveEndpoints();
 app.MapControllers();
 app.UseSerilogRequestLogging();
 app.MapOpenApi();
-
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+    });
+}
 
 app.Run();
 

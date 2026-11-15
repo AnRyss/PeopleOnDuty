@@ -5,6 +5,8 @@ using PeopleOnDuty.src.Modules.ArchiveTask;
 using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Tasks;
 using PeopleOnDuty.src.Modules.Users;
+using PeopleOnDuty.src.Modules.Users.Application;
+using src.Modules.Users.Application;
 
 namespace PeopleOnDuty.src.Modules.Host
 {
@@ -25,6 +27,8 @@ namespace PeopleOnDuty.src.Modules.Host
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IArchiveTaskRepository, ArchiveTaskRepository>();
             services.AddScoped<IArchiveTaskService, ArchiveTaskService>();
+            services.AddScoped<TokenService>();
+            services.AddSingleton<ILinkCodeService, InMemoryLinkCodeService>();
             return services;
         }
     }

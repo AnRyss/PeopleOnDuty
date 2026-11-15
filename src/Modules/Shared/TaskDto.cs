@@ -1,43 +1,11 @@
-namespace PeopleOnDuty.src.Modules.Tasks
-{
-    public record struct TaskDto
-    {
-        public TaskStatus TaskStatus;
-        public Guid TaskId;
-        public string Name;
-        public string? Description;
-        public string Reward;
-        public Guid AuthorId;
-        public bool IsPublic;
-        public DateTime CreatedAt { get; init; }
-        public TaskDto(string name, string? description, string reward, Guid authorName,
-         Guid taskId, TaskStatus taskStatus, DateTime createdAt)
-        {
-            CreatedAt = createdAt;
-            IsPublic = false;
-            Description = description;
-            Name = name;
-            Reward = reward;
-            AuthorId = authorName;
-            TaskId = taskId;
-            TaskStatus = taskStatus;
-
-        }
-
-        public TaskDto(string name, string? description, string reward, Guid authorName, 
-        Guid taskId, TaskStatus taskStatus, bool isPublic, DateTime createdAt)
-        {
-            CreatedAt = createdAt;
-            IsPublic = isPublic;
-            Description = description;
-            Name = name;
-            Reward = reward;
-            AuthorId = authorName;
-            TaskId = taskId;
-            TaskStatus = taskStatus;
-
-        }
-
-
-    }
-}
+using TaskStatus = PeopleOnDuty.src.Modules.Tasks.TaskStatus;
+public readonly record struct TaskDto(
+    string Name,
+    string? Description,
+    string Reward,
+    Guid AuthorId,
+    Guid TaskId,
+    TaskStatus TaskStatus,
+    bool IsPublic,
+    DateTime CreatedAt
+);

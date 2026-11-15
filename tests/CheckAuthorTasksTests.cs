@@ -22,7 +22,7 @@ public class CheckAuthorTasksScenarioTests
                  "name", "desc", "reward",
                  Guid.NewGuid(), taskId,
                  PeopleOnDuty.src.Modules.Tasks.TaskStatus.TAKEN,
-                 isPublic: true, DateTime.UtcNow));
+                  true, DateTime.UtcNow));
 
         var bot = new Mock<ITelegramBotClient>();
         var users = new Mock<IUserService>();

@@ -1,20 +1,23 @@
+
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using PeopleOnDuty.src.Modules.Shared;
 using PeopleOnDuty.src.Modules.Users;
 using src.Modules.Users.Application;
-using Xunit;
 
+using Microsoft.Extensions.Logging;
 namespace PeopleOnDuty.src.Tests;
 
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _repo = new();
      private readonly Mock<IConfiguration> _configMock = new Mock<IConfiguration>();
+     private readonly Mock<ILogger<UserService>> _logger = new();
     private  Mock<TokenService> _tokens => new Mock<TokenService>(MockBehavior.Default,_configMock.Object);
     private readonly UserService _sut;
 
-    public UserServiceTests() => _sut = new UserService(_repo.Object, _tokens.Object);
+    public UserServiceTests() => _sut = new UserService(_repo.Object, _tokens.Object, _logger.Object);
 
     [Fact]
     public async Task GetOrCreateByTelegramIdAsync_WhenExists_ReturnsUser()

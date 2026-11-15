@@ -11,7 +11,8 @@ using Telegram.Bot.Types.ReplyMarkups;
 namespace PeopleOnDuty.src.Modules.TelegramBot;
 
 
-public class UpdateHandler(ScenarioRouter router, IUserStateRepository userStateRepository, ILogger<UpdateHandler> logger, UserLockProvider userLockProvider)
+public class UpdateHandler(ScenarioRouter router, IUserStateRepository userStateRepository, ILogger<UpdateHandler> logger,
+ UserLockProvider userLockProvider)
 {
 
 

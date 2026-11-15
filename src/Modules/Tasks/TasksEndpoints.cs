@@ -25,11 +25,19 @@ public static class TasksEndpoints
             var task = await taskService.GetTaskAsync(id, ct);
             return task is null ? Results.NotFound() : Results.Ok(task);
         });
-
+        group.MapGet("/author", async (
+            ITaskService taskService,
+            ICurrentUser currentUser,
+            CancellationToken ct) =>
+        {
+           
+            var tasks = await taskService.GetByAuthorAsync(currentUser.UserId, ct);
+            return Results.Ok(tasks);
+        });
         group.MapPost("/", async (
-            CreateTaskRequest request, 
-            ITaskService taskService, 
-            [FromServices] ICurrentUser currentUser, 
+            CreateTaskRequest request,
+            ITaskService taskService,
+            [FromServices] ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             var createdTask = new TaskBuilder()
@@ -44,9 +52,9 @@ public static class TasksEndpoints
         });
 
         group.MapPost("/{id:guid}/take", async (
-            Guid id, 
-            ITaskService taskService, 
-            [FromServices] ICurrentUser currentUser, 
+            Guid id,
+            ITaskService taskService,
+            [FromServices] ICurrentUser currentUser,
             CancellationToken ct) =>
         {
             await taskService.TakeTaskAsync(id, currentUser.UserId, ct);

@@ -35,19 +35,22 @@ namespace PeopleOnDuty.src.Modules.Users
     }
     public async Task CreateNew(User user, CancellationToken ct)
     {
-      var exists = await userContext.Users.FirstOrDefaultAsync(u => u.Name == user.Name, ct);
-      if (exists is null)
-      {
-        
-        if (String.IsNullOrEmpty(user.Name))
+      if (String.IsNullOrEmpty(user.Name))
         throw new InvalidDataException("Укажите имя");
+      var exists = await userContext.Users.FirstOrDefaultAsync(u => u.Name == user.Name, ct);
+      if (exists is not null)
+        throw new InvalidOperationException("Пользователь с таким именем уже существует");
+
+      try
+      {
         await userContext.Users.AddAsync(user, ct);
         await userContext.SaveChangesAsync(ct);
       }
-      else
+      catch (DbUpdateException)
       {
         throw new InvalidOperationException("Пользователь с таким именем уже существует");
       }
+
     }
     public async Task<User> CreateNew(string name, string passwordHash, CancellationToken ct)
     {
@@ -58,5 +61,19 @@ namespace PeopleOnDuty.src.Modules.Users
 
     }
 
+    public async Task<User?> GetByName(string name, CancellationToken ct)
+    {
+      return await userContext.Users.FirstOrDefaultAsync(u => u.Name == name, ct);
+
+    }
+    public async Task SaveAsync(User user, CancellationToken ct)
+    {
+      if (userContext.Entry(user).State == EntityState.Detached)
+      {
+        userContext.Users.Update(user);
+      }
+
+      await userContext.SaveChangesAsync(ct);
+    }
   }
 }

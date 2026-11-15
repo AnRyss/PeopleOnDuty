@@ -10,10 +10,13 @@ namespace PeopleOnDuty.src.Modules.Users
         }
         public DbSet<User> Users => Set<User>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<User>()
+        { var userEntity =  modelBuilder.Entity<User>();
+            userEntity
     .HasIndex(u => u.Name)
     .IsUnique();
+    userEntity.HasIndex(u => u.TelegramId)
+    .IsUnique();
+
             base.OnModelCreating(modelBuilder);
         }
 

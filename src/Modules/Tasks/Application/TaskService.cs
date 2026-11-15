@@ -4,7 +4,7 @@ using PeopleOnDuty.src.Modules.Tasks;
 
 namespace PeopleOnDuty.src.Modules.Tasks
 {
-    public class TaskService(ITaskRepository taskRepository,IConfiguration config) : ITaskService
+    public class TaskService(ITaskRepository taskRepository, IConfiguration config) : ITaskService
     {
         public async Task AbandonTaskAsync(Guid taskId, Guid userId, CancellationToken ct)
         {
@@ -31,9 +31,9 @@ namespace PeopleOnDuty.src.Modules.Tasks
 
         public async Task<Guid> CreateTaskAsync(DutyTask task, CancellationToken ct)
         {
-            var cooldownHours  = config.GetValue<int>("Tasks:CreationCooldownHours", 1);
-            if (cooldownHours  < 0 ) cooldownHours  = -cooldownHours ;
-            var timeAgo = DateTime.UtcNow.AddHours(-cooldownHours );
+            var cooldownHours = config.GetValue<int>("Tasks:CreationCooldownHours", 1);
+            if (cooldownHours < 0) cooldownHours = -cooldownHours;
+            var timeAgo = DateTime.UtcNow.AddHours(-cooldownHours);
             var hasRecentTask = await taskRepository.HasUserCreatedTaskSinceAsync(task.AuthorId, timeAgo, ct);
 
             if (hasRecentTask)
@@ -102,14 +102,14 @@ namespace PeopleOnDuty.src.Modules.Tasks
         private static TaskDto ToDto(DutyTask task)
         {
             return new TaskDto(
-                name: task.Name,
-                description: task.Description,
-                reward: task.Reward,
-                authorName: task.AuthorId,
-                taskId: task.TaskId,
-                taskStatus: task.Status,
-                isPublic: task.IsPublic,
-                createdAt: task.CreatedAt
+                Name: task.Name,
+                Description: task.Description,
+                Reward: task.Reward,
+                AuthorId: task.AuthorId,
+                TaskId: task.TaskId,
+                TaskStatus: task.Status,
+                IsPublic: task.IsPublic,
+                CreatedAt: task.CreatedAt
             );
         }
     }

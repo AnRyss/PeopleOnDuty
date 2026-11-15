@@ -17,7 +17,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
                 PermitLimit = 25,
                 Window = TimeSpan.FromSeconds(1),
                 SegmentsPerWindow = 2,
-                QueueLimit = int.MaxValue,
+                QueueLimit = 100,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst
             });
 
@@ -25,7 +25,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot
             {
                 InnerHandler = new HttpClientHandler()
             });
-            // services.AddScoped<PendingActionQueue>(); 
+
             services.AddScoped<MainMenuRenderer>();
             services.AddScoped<MainMenuScenario>();
             services.AddScoped<CreateTaskScenario>();

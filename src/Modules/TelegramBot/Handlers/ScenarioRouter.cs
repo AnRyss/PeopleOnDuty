@@ -32,7 +32,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Handlers.UpdateHandler
                 // Сначала по коллбэкам
                 if (update.CallbackQuery?.Data is { } data)
                 {   
-                    state.ResetAllButDraft();
+                    state.ResetAllButDraft(); // Сбрасывается состояние ожидания инпута
                     await userStateRepository.SaveAsync(state,ct);
                     var scenarioByCallback = scenarios.FirstOrDefault(s =>
                         s.HandledCallbacks.Contains(data) ||
