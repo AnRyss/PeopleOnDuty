@@ -7,8 +7,9 @@ using TaskStatus = PeopleOnDuty.src.Modules.Tasks.TaskStatus;
 
 namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios;
 
-public class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService,
-ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRenderer mainMenuRenderer) : IScenario
+public partial class CheckAuthorTasksScenario(IUserService userService, ITaskService taskService, IArchiveTaskService archiveTaskService,
+ITelegramBotClient bot, IUserStateRepository userStateRepository,
+MainMenuRenderer mainMenuRenderer, ILogger<CheckAuthorTasksScenario> logger) : IScenario
 {
     public IEnumerable<string> HandledCallbacks => new[]
     {
@@ -18,10 +19,18 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
         "author_task_back"
     };
 
-    public bool CanHandleInput(string? waitingForField) => false;
+    public bool CanHandleInput(string? waitingForField) => waitingForField is "archive_answer";
 
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
+        if (update.Message?.Text is { } text)
+        {
+            if (state.WaitingForField == "archive_answer")
+            {
+                await HandleArchiveAnswerAsync(update, state, text, ct);
+                return;
+            }
+        }
         if (update.CallbackQuery is not { } callback) return;
 
         var chatId = callback.Message!.Chat.Id;
@@ -33,7 +42,7 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
 
         if (data == "author_task")
         {
-            await RenderAuthorTasks(chatId,messageId, state, ct);
+            await RenderAuthorTasks(chatId, messageId, state, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
             return;
         }
@@ -124,9 +133,13 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
 
     private async Task RenderTaskActions(long chatId, int messageId, Guid taskId, UserState state, CancellationToken ct)
     {
+        var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
         var task = await taskService.GetTaskAsync(taskId, ct);
-        if (task is null) return;
-
+        if (task is null || task.Value.AuthorId != user.UserId)
+        {
+            await bot.AnswerCallbackQuery("Задача не найдена или у вас нет прав.", showAlert: true, cancellationToken: ct);
+            return;
+        }
         var t = task.Value;
 
         var text = $"""
@@ -147,8 +160,6 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
                 InlineKeyboardButton.WithCallbackData("✅ Завершить", $"complete_task:{t.TaskId}")
             });
         }
-
-
         if (t.TaskStatus == TaskStatus.OPENED)
         {
             buttons.Add(new[]
@@ -156,8 +167,6 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
                 InlineKeyboardButton.WithCallbackData("🗑 Удалить", $"delete_task:{t.TaskId}")
             });
         }
-
-
         buttons.Add(new[]
         {
             InlineKeyboardButton.WithCallbackData("⬅️ Назад к списку", "author_task")
@@ -173,35 +182,5 @@ ITelegramBotClient bot, IUserStateRepository userStateRepository, MainMenuRender
             parseMode: ParseMode.Markdown,
             cancellationToken: ct);
     }
-    private async Task HandleCompleteTaskAsync( //callback
-    long chatId, int messageId, Guid taskId, UserState state, CancellationToken ct)
-    {
-        var task = await taskService.GetTaskAsync(taskId, ct);
-        if (task is null)
-        {
-            await bot.EditMessageText(chatId, messageId, "Задача не найдена. Попробуйте еще раз.", cancellationToken: ct);
-            return;
-        }
-        if (task.Value.IsPublic)
-        {
-            state.WaitingForField = "archive_answer";
-            state.PendingTaskId = task.Value.TaskId.ToString();
-            await userStateRepository.SaveAsync(state, ct);
 
-            await bot.EditMessageText(
-                chatId,
-                messageId,
-                "Введите ответ на задачу (он будет сохранён в архиве):",
-                cancellationToken: ct);
-            return;
-        }
-        else
-        {
-            await taskService.CompleteTaskAsync(taskId, ct);
-            await bot.EditMessageText(chatId, messageId, "✅ Задача завершена!", cancellationToken: ct);
-        }
-
-
-
-    }
 }

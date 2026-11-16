@@ -10,8 +10,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
     MainMenuRenderer mainMenuRenderer) : IScenario
     {
         public IEnumerable<string> HandledCallbacks => new[] { "taken_task", "taken_task_back", "taken_task_abandon" };
-        // public bool CanHandle(StateType state, Update update) =>
-        //state is StateType.CheckTakenTasks;
+
         public bool CanHandleInput(string? waitingForField) => false;
 
 
@@ -41,8 +40,6 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
                 return;
             }
             await RenderTakenTasks(chatId, messageId, state, ct);
-            //state.CurrentState = StateType.MainMenu;
-            //await userStateRepository.SaveAsync(state, ct);
             await bot.AnswerCallbackQuery(callback.Id, cancellationToken: ct);
 
         }
@@ -110,7 +107,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
         }
 
 
-        public async Task RenderTakenTasks(long chatId, int messageId,UserState state, CancellationToken ct)
+        public async Task RenderTakenTasks(long chatId, int messageId, UserState state, CancellationToken ct)
         {
             var user = await userService.GetOrCreateByTelegramIdAsync(state.TelegramUserId, ct);
             var toMainMenuButton = new InlineKeyboardButton("⬅️ В главное меню", "taken_task_back");
@@ -136,7 +133,7 @@ namespace PeopleOnDuty.src.Modules.TelegramBot.Scenarios
             var keyboard = new InlineKeyboardMarkup(buttons);
 
             await bot.EditMessageText(
-                chatId,messageId, 
+                chatId, messageId,
                 "Выберите задачу, которую хотите посмотреть:",
                 replyMarkup: keyboard,
                 cancellationToken: ct);

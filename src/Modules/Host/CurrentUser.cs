@@ -9,7 +9,7 @@ namespace PeopleOnDuty.src.Modules.Host
         {
             get
             {
-                // Достаём пользователя из текущего HTTP-запроса
+               
                 var user = httpContextAccessor.HttpContext?.User;
 
                 // Ищем claim, в который мы клали UserId при генерации токена

@@ -27,18 +27,14 @@ public class ArchiveTaskScenario(
     };
 
     public bool CanHandleInput(string? waitingForField) =>
-        waitingForField is "archive_answer" or "archive_query";
+        waitingForField is "archive_query";
 
     public async Task HandleAsync(Update update, UserState state, CancellationToken ct)
     {
         // 1. Текст (ввод ответа или поисковый запрос)
         if (update.Message?.Text is { } text)
         {
-            if (state.WaitingForField == "archive_answer")
-            {
-                await HandleArchiveAnswerAsync(update, state, text, ct);
-                return;
-            }
+           
 
             if (state.WaitingForField == "archive_query")
             {
@@ -189,41 +185,5 @@ public class ArchiveTaskScenario(
         await bot.EditMessageText(chatId, messageId, text, replyMarkup: keyboard, parseMode: ParseMode.Markdown, cancellationToken: ct);
     }
 
-    private async Task HandleArchiveAnswerAsync(
-        Update update, UserState state, string answer, CancellationToken ct)
-    {
-        if (state.PendingTaskId is not { } taskIdString) return;
-        if (!Guid.TryParse(taskIdString, out var taskId)) return;
-
-        var task = await taskService.GetTaskAsync(taskId, ct);
-        if (task is null) return;
-
-        var dto = new ArchivedTaskDto
-        {
-            OriginalTaskId = task.Value.TaskId,
-            TaskName = task.Value.Name,
-            TaskDescription = task.Value.Description,
-            Reward = task.Value.Reward,
-            AuthorId = task.Value.AuthorId,
-            Answer = answer,
-            CompletedAt = DateTime.UtcNow
-        };
-
-       var savedArchiveId  = await archiveTaskService.SaveAsync(dto, ct);
-       try{
-        await taskService.CompleteTaskAsync(taskId, ct);
-       }
-       catch (Exception ex)
-        {   
-            logger.LogError(ex, "Непредвиденная ошибка при сохранении в архив задачи {taskId}", dto.OriginalTaskId);
-            await archiveTaskService.DeleteAsync(savedArchiveId, ct);
-        await bot.SendMessage(update.Message!.Chat.Id, "Ошибка при завершении задачи. Попробуйте позже.", cancellationToken: ct);
-        return;
-        }
-        state.WaitingForField = null;
-        state.PendingTaskId = null;
-        await userStateRepository.SaveAsync(state, ct);
-        logger.LogInformation("Задача {OriginalTaskId} сохранена в архив с айди {ArchiveId}", dto.OriginalTaskId, savedArchiveId);
-        await bot.SendMessage(update.Message!.Chat.Id, "✅ Задача завершена и сохранена в архив!", cancellationToken: ct);
-    }
+   
 }
